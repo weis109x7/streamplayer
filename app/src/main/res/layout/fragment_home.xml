@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.home.HomeFragment">
+
+    <TextView
+        android:id="@+id/text_home"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.977" />
+
+
+<!--    <FrameLayout-->
+<!--        android:id="@+id/video_surface_frame"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="219dp"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:foregroundGravity="clip_horizontal|clip_vertical"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        tools:ignore="true">-->
+
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_centerInParent="true"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="0dp" />
+
+<!--    </FrameLayout>-->
+
+
+    <Button
+        android:id="@+id/fullScreen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="Fullscreen"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/surfaceView" />
+
+    <Button
+        android:id="@+id/Record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="Record"
+        app:layout_constraintEnd_toStartOf="@+id/fullScreen"
+        app:layout_constraintTop_toBottomOf="@+id/surfaceView" />
+
+    <Button
+        android:id="@+id/Snapshot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="Snapshot"
+        app:layout_constraintEnd_toStartOf="@+id/Record"
+        app:layout_constraintTop_toBottomOf="@+id/surfaceView" />
+
+
+    <Button
+        android:id="@+id/buttonup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:text="Up"
+        app:layout_constraintBottom_toTopOf="@+id/buttondown"
+        app:layout_constraintEnd_toStartOf="@+id/buttonright"
+        app:layout_constraintStart_toEndOf="@+id/buttonleft" />
+
+    <Button
+        android:id="@+id/buttondown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Down"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/buttonleft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Left"
+        app:layout_constraintBottom_toTopOf="@+id/buttondown"
+        app:layout_constraintEnd_toStartOf="@+id/buttondown" />
+
+    <Button
+        android:id="@+id/buttonright"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Right"
+        app:layout_constraintBottom_toTopOf="@+id/buttondown"
+        app:layout_constraintStart_toEndOf="@+id/buttondown" />
+
+    <TextView
+        android:id="@+id/directionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nothing"
+        app:layout_constraintBottom_toTopOf="@+id/buttondown"
+        app:layout_constraintEnd_toStartOf="@+id/buttonright"
+        app:layout_constraintStart_toEndOf="@+id/buttonleft"
+        app:layout_constraintTop_toBottomOf="@+id/buttonup" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
