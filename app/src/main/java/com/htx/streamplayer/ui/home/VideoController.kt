@@ -68,14 +68,14 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
             options.add("--video-filter=rotate")
             options.add("--rotate-angle=180")
 
-            options.add(":network-caching=0");
-            options.add(":clock-jitter=0");
-            options.add(":clock-synchro=0");
+            options.add(":network-caching=0")
+            options.add(":clock-jitter=0")
+            options.add(":clock-synchro=0")
 //            options.add("--rtsp-tcp");
-//            options.add("--file-caching=0");
-//            options.add("--live-caching=0");
-            options.add("--drop-late-frames");
-            options.add("--skip-frames");
+//            options.add("--file-caching=0")
+//            options.add("--live-caching=0")
+            options.add("--drop-late-frames")
+            options.add("--skip-frames")
 
 
             // create libvlc object
@@ -121,9 +121,6 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
     fun releasePlayer() {
         Log.i(TAG, "releasing player started")
 
-        //stop ongoing recording
-        stoprecord()
-
         //clearing all reference
         mediaPlayer!!.stop()
         mediaPlayer!!.detachViews()
@@ -168,7 +165,6 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
 
     override fun onSurfacesDestroyed(vlcVout: IVLCVout?) {
         Log.e(TAG, "Surface Destroy")
-        stoprecord()
         releasePlayer()
     }
 

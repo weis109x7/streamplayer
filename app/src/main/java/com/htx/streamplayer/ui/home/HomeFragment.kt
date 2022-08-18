@@ -22,6 +22,8 @@ class HomeFragment : Fragment() {
 
     private var videoController: VideoController?=null
 
+    private var recordToggle = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -127,7 +129,6 @@ class HomeFragment : Fragment() {
 
 
         //setup recording button
-        var recordToggle = false
         val buttonRecord = binding.Record
         buttonRecord.setOnClickListener {
             if (!recordToggle){
@@ -151,6 +152,11 @@ class HomeFragment : Fragment() {
         Log.i(TAG, "View Destroyed")
         super.onDestroyView()
         _binding = null
+
+        if (recordToggle) {
+            videoController?.stoprecord()
+            recordToggle=false
+        }
         videoController?.releasePlayer()
 
     }

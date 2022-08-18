@@ -1,4 +1,4 @@
-package com.htx.streamplayer.ui.gallery
+package com.htx.streamplayer.ui.settings
 
 import android.content.Context
 import android.os.Bundle
@@ -6,21 +6,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.htx.streamplayer.MainActivity
-import com.htx.streamplayer.databinding.FragmentGalleryBinding
-import java.io.File
-import java.io.IOException
+import com.htx.streamplayer.databinding.FragmentSettingsBinding
 import kotlin.concurrent.thread
 
-private const val TAG = "GalleryActivity"
+private const val TAG = "SettingsActivity"
 
 class GalleryFragment : Fragment() {
-    private var _binding: FragmentGalleryBinding? = null
+    private var _binding: FragmentSettingsBinding? = null
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
@@ -32,7 +27,7 @@ class GalleryFragment : Fragment() {
     ): View {
         Log.i(TAG, "on create view")
 
-        _binding = FragmentGalleryBinding.inflate(inflater, container, false)
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         /* View model implementation if using

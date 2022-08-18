@@ -1,7 +1,6 @@
-package com.htx.streamplayer.ui.gallery
+package com.htx.streamplayer.ui.settings
 
 import android.util.Log
-import android.widget.Toast
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
