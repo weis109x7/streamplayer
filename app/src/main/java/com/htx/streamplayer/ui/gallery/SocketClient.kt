@@ -1,6 +1,7 @@
 package com.htx.streamplayer.ui.gallery
 
 import android.util.Log
+import android.widget.Toast
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
@@ -17,6 +18,7 @@ class SocketClient (address: String, port: Int){
         try {
             println("Init Socket")
             println("Connected to server at $address on port $port")
+
         } catch (e : Exception) {
             Log.i(TAG, e.toString())
         }

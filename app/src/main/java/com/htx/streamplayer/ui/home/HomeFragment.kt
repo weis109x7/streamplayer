@@ -3,163 +3,195 @@ package com.htx.streamplayer.ui.home
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.util.Log
 import android.view.*
-import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
-import com.arthenica.ffmpegkit.FFmpegKit
 import com.htx.streamplayer.MainActivity
-import com.htx.streamplayer.R
 import com.htx.streamplayer.databinding.FragmentHomeBinding
-import java.io.File
-import java.io.FileWriter
-
+import org.videolan.libvlc.util.VLCVideoLayout
 
 private const val TAG = "HomeFragmentActivity"
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
+    // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
-    private var mSurface: SurfaceView? = null
-    private var mFullSurface: SurfaceView? = null
     private var videoController: VideoController?=null
-
-    private var streamURL:String?=null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        var sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
-
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
-
+        Log.i(TAG, "Create View")
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
+        /* View model implementation if using
+//        val homeViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+//        val textView: TextView = binding.textHome
+//        homeViewModel.text.observe(viewLifecycleOwner) {
+//            textView.text = it
+//        }
+*/
 
-        mSurface = binding.surfaceView
-        videoController= VideoController(requireActivity())
-        videoController!!.mSurface=mSurface
-
+        innitPlayer()
         innitButtons()
 
-        streamURL = sharedPreference.getString("savedURL"," ")
-        streamURL?.let { videoController!!.createPlayer(it) }
 
         return root
     }
 
-    @SuppressLint("ClickableViewAccessibility")
+    private fun innitPlayer() {
+        Log.i(TAG, "innitPlayer")
+        val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
+        val streamURL = sharedPreference.getString("savedURL"," ")
+
+        videoController= VideoController(requireActivity())
+        videoController!!.mSurface=binding.surfaceView
+
+        //create player with media URL
+        streamURL?.let { videoController!!.createPlayer(it) }
+
+    }
+
     private fun innitButtons() {
-        val buttonup = binding.buttonup
-        val buttondown = binding.buttondown
-        val buttonleft = binding.buttonleft
-        val buttonright = binding.buttonright
+        Log.i(TAG, "InnitButtons")
+        /* wsad implementation
+//        updownleftright buttons
+//        val buttonup = binding.buttonup
+//        val buttondown = binding.buttondown
+//        val buttonleft = binding.buttonleft
+//        val buttonright = binding.buttonright
 
         // finding the edit text
-        val directionText = binding.directionText
+//        val directionText = binding.directionText
 
         //repeat while pressed
-        buttonup.setOnTouchListener(RepeatListener(400, 400) {
-            // the code to execute repeatedly
-            Log.i(TAG, "forward")
-            directionText.text = getString(R.string.forward)
-            (activity as MainActivity).client?.write("FORWARD")
-        })
-        buttonup.setOnClickListener {
-            Log.i(TAG, "STOP")
-            directionText.text = "STOP"
-            (activity as MainActivity).client?.write("STOP")
-        }
+//        buttonup.setOnTouchListener(RepeatListener(400, 400) {
+//            // the code to execute repeatedly
+//            Log.i(TAG, "forward")
+//            directionText.text = getString(R.string.forward)
+//            (activity as MainActivity).client?.write("FORWARD")
+//        })
+//
+//        buttondown.setOnTouchListener(RepeatListener(400, 400) {
+//            // the code to execute repeatedly
+//            Log.i(TAG, "back")
+//            directionText.text = getString(R.string.back)
+//            (activity as MainActivity).client?.write("BACKWARD")
+//        })
+//
+//        buttonleft.setOnTouchListener(RepeatListener(400, 400) {
+//            // the code to execute repeatedly
+//            Log.i(TAG, "left")
+//            directionText.text = getString(R.string.left)
+//            (activity as MainActivity).client?.write("LEFT")
+//        })
+//
+//        buttonright.setOnTouchListener(RepeatListener(400, 400) {
+//            // the code to execute repeatedly
+//            Log.i(TAG, "right")
+//            directionText.text = getString(R.string.right)
+//            (activity as MainActivity).client?.write("RIGHT")
+//
+//        })
+         */
 
-        buttondown.setOnTouchListener(RepeatListener(400, 400) {
-            // the code to execute repeatedly
-            Log.i(TAG, "back")
-            directionText.text = getString(R.string.back)
-            (activity as MainActivity).client?.write("BACKWARD")
-        })
-        buttondown.setOnClickListener {
-            Log.i(TAG, "STOP")
-            directionText.text = "STOP"
-            (activity as MainActivity).client?.write("STOP")
-        }
+        val joystick = binding.joystick
+        joystick.setOnMoveListener ({ angle, strength ->
+            //will keep running while joystick is pressed
+            Log.i(TAG, "angle is $angle strength is $strength")
+            val x = strength * kotlin.math.cos(Math.toRadians(angle.toDouble()))
+            val y = strength * kotlin.math.sin(Math.toRadians(angle.toDouble()))
+//            Log.i(TAG, "normalized X $x")
+//            Log.i(TAG, "normalized Y $y")
 
-        buttonleft.setOnTouchListener(RepeatListener(400, 400) {
-            // the code to execute repeatedly
-            Log.i(TAG, "left")
-            directionText.text = getString(R.string.left)
-            (activity as MainActivity).client?.write("LEFT")
-        })
-        buttonleft.setOnClickListener {
-            Log.i(TAG, "STOP")
-            directionText.text = "STOP"
-            (activity as MainActivity).client?.write("STOP")
-        }
 
-        buttonright.setOnTouchListener(RepeatListener(400, 400) {
-            // the code to execute repeatedly
-            Log.i(TAG, "right")
-            directionText.text = getString(R.string.right)
-            (activity as MainActivity).client?.write("RIGHT")
-        })
-        buttonright.setOnClickListener {
-            Log.i(TAG, "STOP")
-            directionText.text = "STOP"
-            (activity as MainActivity).client?.write("STOP")
-        }
+            //convert x y values to servo motor inputs
+            var p = y+x
+            p = normalize(ensureRange(p,-100.0,100.0),-100.0,100.0,2.0,12.0)
+            var p1 = y-x
+            p1 = normalize(ensureRange(p1,-100.0,100.0),-100.0,100.0,12.0,2.0)
+//            Log.i(TAG, p.toString())
+//            Log.i(TAG, p1.toString())
 
+            //send motor inputs through sockets
+            (activity as MainActivity).client?.write("$p#$p1#")
+            Log.i(TAG, "$p#$p1" )
+        },500)
+
+
+        //setup recording button
+        var recordToggle = false
         val buttonRecord = binding.Record
         buttonRecord.setOnClickListener {
-            activity?.runOnUiThread {
-                videoController?.record()
+            if (!recordToggle){
+                recordToggle = true
+                binding.Record.text = "Stop"
+                activity?.runOnUiThread {
+                    videoController?.record()
+                }
+            }else{
+                recordToggle = false
+                binding.Record.text = "Record"
+                activity?.runOnUiThread {
+                    videoController?.stoprecord()
+                }
             }
         }
-
-        val buttonStop = binding.Snapshot
-        buttonStop.setOnClickListener {
-            videoController?.snapshot()
-        }
-
     }
 
 
     override fun onDestroyView() {
+        Log.i(TAG, "View Destroyed")
         super.onDestroyView()
         _binding = null
+        videoController?.releasePlayer()
+
+    }
+
+    override fun onResume() {
+        Log.i(TAG, "on Resume")
+        super.onResume()
+
+        //use to hide title bar to maximise screen space
+        (activity as AppCompatActivity?)!!.supportActionBar!!.hide()
+    }
+
+    //normalize function
+    private fun normalize(value:Double, min:Double, max:Double, outmin:Double, outmax:Double): Double {
+        return ( (value-min)/(max-min) * (outmax-outmin) +outmin)
+    }
+
+    //ensure range
+    private fun ensureRange(value: Double, min: Double, max: Double): Double {
+        return value.coerceAtLeast(min).coerceAtMost(max)
     }
 }
 
 //test func for storage
-fun writeFileOnInternalStorage(mcoContext: Context, sFileName: String?, sBody: String?) {
-    val dir = File("/storage/emulated/0/Download", "mydir")
-    if (!dir.exists()) {
-        dir.mkdir()
-    }
-    try {
-        val gpxfile = File(dir, sFileName)
-        val writer = FileWriter(gpxfile)
-        writer.append(sBody)
-        writer.flush()
-        writer.close()
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
+//fun writeFileOnInternalStorage(mcoContext: Context, sFileName: String?, sBody: String?) {
+//    val dir = File("/storage/emulated/0/Download", "mydir")
+//    if (!dir.exists()) {
+//        dir.mkdir()
+//    }
+//    try {
+//        val gpxfile = File(dir, sFileName)
+//        val writer = FileWriter(gpxfile)
+//        writer.append(sBody)
+//        writer.flush()
+//        writer.close()
+//    } catch (e: Exception) {
+//        e.printStackTrace()
+//    }
+//}
 
+/* Unused repeat listener for wsad movement
 class RepeatListener(
     initialInterval: Int, normalInterval: Int,
     clickListener: View.OnClickListener?
@@ -218,3 +250,4 @@ class RepeatListener(
         this.clickListener = clickListener
     }
 }
+ */

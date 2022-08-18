@@ -12,39 +12,38 @@ import android.view.SurfaceView
 import android.widget.FrameLayout
 import android.widget.MediaController
 import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.interfaces.IVLCVout
+import org.videolan.libvlc.media.VideoView
+import org.videolan.libvlc.util.DisplayManager
+import org.videolan.libvlc.util.VLCVideoLayout
 import java.io.File
 import java.io.InputStream
 import java.util.*
 
-
 class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventListener {
     // create TAG for logging
     companion object {
-        private var TAG= "VideoController"
+        private var TAG = "VideoController"
     }
+
     // declare media player object
-    private var mediaPlayer: MediaPlayer?=null
+    private var mediaPlayer: MediaPlayer? = null
+
     // declare surface view object
-    var mSurface: SurfaceView?=null
-    // declare surface holder object
-    var holder: SurfaceHolder?= null
+    var mSurface: VLCVideoLayout? = null
 
     // declare libvlc object
-    private var libvlc: LibVLC?=null
-
-    private var controller : MediaController?=null
+    private var libvlc: LibVLC? = null
 
     // declare/initialize activity
-    private var activity: Activity?=null
+    private var activity: Activity? = null
     init {
-        this.activity=activity
+        this.activity = activity
     }
-
-
 
 
     /**
@@ -53,7 +52,8 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
      * @param media
      */
     fun createPlayer(media: String) {
-        if(mediaPlayer!=null && libvlc!=null){
+        if (mediaPlayer != null || libvlc != null) {
+            Log.i(TAG, "player not null, release player first")
             releasePlayer()
         }
         Log.i(TAG, "Creating vlc player")
@@ -62,49 +62,55 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
             val options = ArrayList<String>()
             options.add("--aout=opensles")
             options.add("--http-reconnect")
-            options.add("--audio-time-stretch") // time stretching
-            options.add("--network-caching=1500")
+//            options.add("--audio-time-stretch") // time stretching
             options.add("-vvv") // verbosity
 
             options.add("--video-filter=rotate")
             options.add("--rotate-angle=180")
 
+            options.add(":network-caching=0");
+            options.add(":clock-jitter=0");
+            options.add(":clock-synchro=0");
+//            options.add("--rtsp-tcp");
+//            options.add("--file-caching=0");
+//            options.add("--live-caching=0");
+            options.add("--drop-late-frames");
+            options.add("--skip-frames");
+
 
             // create libvlc object
             libvlc = LibVLC(activity, options)
 
-            // get surface view holder to display video
-            this.holder=mSurface!!.holder
-            holder!!.setKeepScreenOn(true)
-
             // Creating media player
             mediaPlayer = MediaPlayer(libvlc)
 
-//            controller = MediaController(activity);
-//            controller?.setMediaPlayer(playerInterface);
-//            controller?.setAnchorView(mSurface);
-//            mSurface!!.setOnClickListener{ controller!!.show() }
+            // Setting up video output
+            mediaPlayer!!.attachViews(mSurface!!, null, false, true)
 
-
-
-                    // Setting up video output
-            val vout = mediaPlayer!!.vlcVout
-            vout.setVideoView(mSurface)
-            vout.addCallback(this)
-            vout.attachViews()
-
-            val m = if (media[0] == '/'){
+            //check if URL is local path
+            val m = if (media[0] == '/') {
+                //create media with local path
                 Media(libvlc, media)
-            } else{
+            } else {
+                //create media with URL
                 Media(libvlc, Uri.parse(media))
             }
+
+            //attach media to player
             mediaPlayer!!.media = m
+            //play media
             mediaPlayer!!.play()
 
 
         } catch (e: Exception) {
-            Toast.makeText(activity, "Error in creating player!", Toast
-                .LENGTH_LONG).show()
+            Toast.makeText(
+                activity, "Empty URL!", Toast
+                    .LENGTH_LONG
+            ).show()
+
+            Log.i(TAG, "Error")
+            Log.i(TAG, e.toString())
+            e.printStackTrace()
         }
 
     }
@@ -113,20 +119,23 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
    * release player
    * */
     fun releasePlayer() {
-        Log.i(TAG,"releasing player started")
-        if (libvlc == null)
-            return
+        Log.i(TAG, "releasing player started")
+
+        //stop ongoing recording
+        stoprecord()
+
+        //clearing all reference
         mediaPlayer!!.stop()
-        var vout: IVLCVout = mediaPlayer!!.vlcVout
-        vout.removeCallback(this)
-        vout.detachViews()
+        mediaPlayer!!.detachViews()
         mediaPlayer!!.release()
-        mediaPlayer=null
-        holder = null
+        mediaPlayer = null
         libvlc!!.release()
         libvlc = null
+        mSurface = null
+        libvlc= null
+        activity = null
 
-        Log.i(TAG,"released player")
+        Log.i(TAG, "released player")
     }
 
     override fun onEvent(event: MediaPlayer.Event) {
@@ -136,14 +145,15 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
                 this.releasePlayer()
             }
 
-            MediaPlayer.Event.Playing->Log.i("playing","playing")
-            MediaPlayer.Event.Paused->Log.i("paused","paused")
-            MediaPlayer.Event.Stopped->Log.i("stopped","stopped")
-            else->Log.i("nothing","nothing")
+            MediaPlayer.Event.Playing -> Log.i("playing", "playing")
+            MediaPlayer.Event.Paused -> Log.i("paused", "paused")
+            MediaPlayer.Event.Stopped -> Log.i("stopped", "stopped")
+            else -> Log.i("nothing", "nothing")
         }
     }
 
     override fun onSurfacesCreated(vlcVout: IVLCVout?) {
+        Log.e(TAG, "Surface Created")
         val sw = mSurface!!.width
         val sh = mSurface!!.height
 
@@ -153,108 +163,50 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
         }
 
         mediaPlayer!!.vlcVout.setWindowSize(sw, sh)
-        mediaPlayer!!.aspectRatio="4:3"
-        mediaPlayer!!.setScale(0f)
+        mediaPlayer!!.scale = 0f
     }
 
     override fun onSurfacesDestroyed(vlcVout: IVLCVout?) {
+        Log.e(TAG, "Surface Destroy")
+        stoprecord()
         releasePlayer()
     }
 
-    fun pause(){
-        mediaPlayer?.pause()
-    }
-
-    fun toggleFullScreen() {
-//        TODO create fullscreen
-        Log.v("FullScreen", "-----------Set full screen SCREEN_ORIENTATION_LANDSCAPE------------")
-//      activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-//        val display: Display? = (activity?.windowManager?.getDefaultDisplay())
-//        val size = Point()
-//        if (display != null) {
-//            display.getSize(size)
-//        }
-//        val width = size.x
-//        val height = size.y
-//
-//        Log.d("fffffff", width.toString())
-//        Log.d("fffffff", height.toString())
-//
-//        mSurface?.holder?.setFixedSize(width, height);
-
-
-        //2nd implwmentatipon
-//        Log.v("FullScreen", "-----------Set full screen SCREEN_ORIENTATION_LANDSCAPE------------")
-////        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-//        val size = Point()
-//        (activity?.windowManager?.getDefaultDisplay())?.getSize(size)
-//        val width = size.x
-//        val height = size.y
-//
-//        val layout = FrameLayout.LayoutParams(width, height)
-//        layout.gravity = Gravity.CENTER
-//        mSurface?.layoutParams = layout
-
-    }
-
-    fun snapshot() {
-//        TODO create snapshot
-
-    }
-
     fun record() {
-//        TODO create record
         Log.v("Screen Record", "-----------Trying to record------------")
         val dir = File("/storage/emulated/0/Download", "recording")
-        mediaPlayer?.record(dir.toString())
+
+        val success = mediaPlayer?.record(dir.toString())
+
+        if (success == true) {
+            activity?.runOnUiThread {
+                Toast.makeText(
+                    activity,
+                    "Recording",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            activity?.runOnUiThread {
+                Toast.makeText(
+                    activity,
+                    "Nothing to record",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
-//    private val playerInterface: MediaPlayerControl = object : MediaPlayerControl {
-//        override fun getBufferPercentage(): Int {
-//            return 0
-//        }
-//
-//        override fun getCurrentPosition(): Int {
-//            val pos: Float = mediaPlayer!!.position
-//            return (pos * duration).toInt()
-//        }
-//
-//        override fun getDuration(): Int {
-//            return mediaPlayer!!.length.toInt()
-//        }
-//
-//        override fun isPlaying(): Boolean {
-//            return mediaPlayer!!.isPlaying
-//        }
-//
-//        override fun pause() {
-//            mediaPlayer?.pause()
-//        }
-//
-//        override fun seekTo(pos: Int) {
-//            mediaPlayer?.setPosition(pos.toFloat() / duration)
-//        }
-//
-//        override fun start() {
-//            mediaPlayer?.play()
-//        }
-//
-//        override fun canPause(): Boolean {
-//            return true
-//        }
-//
-//        override fun canSeekBackward(): Boolean {
-//            return true
-//        }
-//
-//        override fun canSeekForward(): Boolean {
-//            return true
-//        }
-//
-//        override fun getAudioSessionId(): Int {
-//            return 0
-//        }
-//    }
-
+    fun stoprecord() {
+        Log.v("Screen Record", "-----------Stop Record------------")
+        mediaPlayer?.record(null)
+        activity?.runOnUiThread {
+            Toast.makeText(
+                activity,
+                "Recording stopped",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 }
 
