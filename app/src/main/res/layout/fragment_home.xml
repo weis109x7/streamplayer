@@ -47,7 +47,14 @@
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="0dp" />
+        tools:layout_editor_absoluteX="0dp" >
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="testbutton" />
+    </org.videolan.libvlc.util.VLCVideoLayout>
 
     <Button
         android:id="@+id/Record"

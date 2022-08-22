@@ -60,7 +60,13 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
         try {
             // create arraylist to assign option to create libvlc object
             val options = ArrayList<String>()
-            options.add("--aout=opensles")
+
+//            options.add("--rtsp-tcp");
+//            options.add("--file-caching=0")
+//            options.add("--live-caching=0")
+//            options.add("--drop-late-frames")
+//            options.add("--skip-frames")
+            options.add("--aout=none")
             options.add("--http-reconnect")
 //            options.add("--audio-time-stretch") // time stretching
             options.add("-vvv") // verbosity
@@ -68,15 +74,10 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
             options.add("--video-filter=rotate")
             options.add("--rotate-angle=180")
 
-            options.add(":network-caching=0")
+            options.add("--swscale-mode=0")
+            options.add(":network-caching=150")
             options.add(":clock-jitter=0")
             options.add(":clock-synchro=0")
-//            options.add("--rtsp-tcp");
-//            options.add("--file-caching=0")
-//            options.add("--live-caching=0")
-            options.add("--drop-late-frames")
-            options.add("--skip-frames")
-
 
             // create libvlc object
             libvlc = LibVLC(activity, options)
@@ -95,6 +96,7 @@ class VideoController(activity: Activity): IVLCVout.Callback, MediaPlayer.EventL
                 //create media with URL
                 Media(libvlc, Uri.parse(media))
             }
+            m.setHWDecoderEnabled(false, false);
 
             //attach media to player
             mediaPlayer!!.media = m
