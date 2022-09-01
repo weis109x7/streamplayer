@@ -1,29 +1,58 @@
 package com.htx.streamplayer.ui.home
 
-import android.R
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.webkit.WebView
-import android.widget.VideoView
+import android.view.*
+import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.htx.streamplayer.MainActivity
 import com.htx.streamplayer.databinding.FragmentHomeBinding
+import org.freedesktop.gstreamer.GStreamer
 
 
 private const val TAG = "HomeFragmentActivity"
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment() , SurfaceHolder.Callback {
+    private external fun nativeGetGStreamerInfo(): String?
+    private external fun nativeInit() // Initialize native code, build pipeline, etc
+    private external fun nativeFinalize() // Destroy pipeline and shutdown native code
+    private external fun nativeSetUri(uri: String) // Set the URI of the media to play
+    private external fun nativePlay() // Set pipeline to PLAYING
+    private external fun nativeSetPosition(milliseconds: Int) // Seek to the indicated position, in milliseconds
+    private external fun nativePause() // Set pipeline to PAUSED
+    private external fun nativeSurfaceInit(surface: Any) // A new surface is available
+    private external fun nativeSurfaceFinalize() // Surface about to be destroyed
+    private val native_custom_data : Long = 0 // Native code will use this to keep private data
+    private var is_playing_desired = true // Whether the user asked to go to PLAYING
+    private val position = 0 // Current position, reported by native code
+    private val duration = 0 // Current clip duration, reported by native code
+    private val is_local_media = false // Whether this clip is stored locally or is being streamed
+    private val desired_position = 0 // Position where the users wants to seek to
+    private val mediaUri : String? = null // URI of the clip being played
+
+
+    companion object {
+        @JvmStatic
+        private external fun nativeClassInit(): Boolean // Initialize native class: cache Method IDs for callbacks
+
+        init {
+            System.loadLibrary("gstreamer_android")
+            System.loadLibrary("streamplayer")
+            nativeClassInit()
+        }
+    }
+
     private var _binding: FragmentHomeBinding? = null
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
-    private var videoController: VideoController?=null
+//    private var videoController: VideoController?=null
 
     private var recordToggle = false
 
@@ -43,6 +72,42 @@ class HomeFragment : Fragment() {
 //            textView.text = it
 //        }
 */
+
+        try {
+            GStreamer.init(requireContext())
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
+
+
+        val tv = binding.textView2
+        tv.text = "Welcome to " + nativeGetGStreamerInfo() + " !"
+
+        val sv = binding.surfaceVideo
+        val sh = sv.holder
+        sh.addCallback(this)
+        if (savedInstanceState != null) {
+            Log.i("GStreamer", "Activity created. Saved state is playing:$is_playing_desired")
+        } else {
+            Log.i("GStreamer", "Activity created. There is no saved state, playing: false")
+        }
+
+        val play = binding.buttonPlay
+        play.setOnClickListener {
+            is_playing_desired = true
+            nativePlay()
+        }
+        val pause = binding.buttonPause
+        pause.setOnClickListener {
+            is_playing_desired = false
+            nativePause()
+        }
+
+        // Start with disabled buttons, until native code is initialized
+        play.isEnabled = false
+        pause.isEnabled = false
+        nativeInit()
+
         innitPlayer()
         innitButtons()
 
@@ -54,11 +119,11 @@ class HomeFragment : Fragment() {
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
         val streamURL = sharedPreference.getString("savedURL"," ")
 
-        videoController= VideoController(requireActivity())
-        videoController!!.mSurface=binding.surfaceView
+//        videoController= VideoController(requireActivity())
+//        videoController!!.mSurface=binding.surfaceView
 
         //create player with media URL
-        streamURL?.let { videoController!!.createPlayer(it) }
+//        streamURL?.let { videoController!!.createPlayer(it) }
 
     }
 
@@ -94,15 +159,15 @@ class HomeFragment : Fragment() {
         buttonRecord.setOnClickListener {
             if (!recordToggle){
                 recordToggle = true
-                binding.Record.text = "Stop"
+                buttonRecord.text = "Stop"
                 activity?.runOnUiThread {
-                    videoController?.record()
+//                    videoController?.record()
                 }
             }else{
                 recordToggle = false
-                binding.Record.text = "Record"
+                buttonRecord.text = "Record"
                 activity?.runOnUiThread {
-                    videoController?.stoprecord()
+//                    videoController?.stoprecord()
                 }
             }
         }
@@ -115,10 +180,10 @@ class HomeFragment : Fragment() {
         _binding = null
 
         if (recordToggle) {
-            videoController?.stoprecord()
+//            videoController?.stoprecord()
             recordToggle=false
         }
-        videoController?.releasePlayer()
+//        videoController?.releasePlayer()
 
     }
 
@@ -138,5 +203,82 @@ class HomeFragment : Fragment() {
     //ensure range
     private fun ensureRange(value: Double, min: Double, max: Double): Double {
         return value.coerceAtLeast(min).coerceAtMost(max)
+    }
+
+    // Called from native code. This sets the content of the TextView from the UI thread.
+    private fun setMessage(message: String) {
+//        val tv = this.findViewById<View>(R.id.textview_message) as TextView
+//        runOnUiThread(Runnable { tv.text = message })
+        //TODO
+    }
+
+    // Called from native code
+    private fun setCurrentPosition(position: Int, duration: Int) {
+//        val sb = this.findViewById<View>(R.id.seek_bar) as SeekBar
+//
+//        // Ignore position messages from the pipeline if the seek bar is being dragged
+//        if (sb.isPressed) return
+//        runOnUiThread(Runnable {
+//            sb.max = duration
+//            sb.progress = position
+//            updateTimeWidget()
+//            sb.isEnabled = duration != 0
+//        })
+//        this.position = position
+//        this.duration = duration
+        //TODO
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        Log.d("GStreamer", "Saving state, playing:$is_playing_desired")
+        outState.putBoolean("playing", is_playing_desired)
+    }
+
+    private fun onGStreamerInitialized() {
+        Log.i("GStreamer", "Gst initialized. Restoring state, playing:$is_playing_desired")
+        // Restore previous playing state
+        if (is_playing_desired) {
+            nativePlay()
+        } else {
+            nativePause()
+        }
+
+        // Re-enable buttons, now that GStreamer is initialized
+        requireActivity().runOnUiThread {
+            binding.buttonPlay.isEnabled = true
+            binding.buttonPause.isEnabled = true
+        }
+    }
+
+    // Called from native code when the size of the media changes or is first detected.
+    // Inform the video surface about the new size and recalculate the layout.
+    private fun onMediaSizeChanged(width: Int, height: Int) {
+        Log.i("GStreamer", "Media size changed to " + width + "x" + height)
+//        val gsv: GStreamerSurfaceView =
+//            this.findViewById<View>(R.id.surface_video) as GStreamerSurfaceView
+//        gsv.media_width = width
+//        gsv.media_height = height
+//        runOnUiThread(Runnable { gsv.requestLayout() })
+        //TODO
+    }
+
+    override fun surfaceChanged(
+        holder: SurfaceHolder, format: Int, width: Int,
+        height: Int
+    ) {
+        Log.d(
+            "GStreamer", "Surface changed to format " + format + " width "
+                    + width + " height " + height
+        )
+        nativeSurfaceInit(holder.surface)
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        Log.d("GStreamer", "Surface created: " + holder.surface)
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        Log.d("GStreamer", "Surface destroyed")
+        nativeSurfaceFinalize()
     }
 }
