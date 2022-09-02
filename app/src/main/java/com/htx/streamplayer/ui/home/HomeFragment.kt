@@ -1,12 +1,12 @@
 package com.htx.streamplayer.ui.home
 
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.*
-import android.widget.ImageButton
-import android.widget.TextView
+import android.view.LayoutInflater
+import android.view.SurfaceHolder
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -31,9 +31,9 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private var is_playing_desired = true // Whether the user asked to go to PLAYING
     private val position = 0 // Current position, reported by native code
     private val duration = 0 // Current clip duration, reported by native code
-    private val is_local_media = false // Whether this clip is stored locally or is being streamed
+    private var is_local_media = false // Whether this clip is stored locally or is being streamed
     private val desired_position = 0 // Position where the users wants to seek to
-    private val mediaUri : String? = null // URI of the clip being played
+    private var mediaUri : String? = null // URI of the clip being played
 
 
     companion object {
@@ -86,26 +86,13 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         val sv = binding.surfaceVideo
         val sh = sv.holder
         sh.addCallback(this)
+
         if (savedInstanceState != null) {
             Log.i("GStreamer", "Activity created. Saved state is playing:$is_playing_desired")
         } else {
             Log.i("GStreamer", "Activity created. There is no saved state, playing: false")
         }
 
-        val play = binding.buttonPlay
-        play.setOnClickListener {
-            is_playing_desired = true
-            nativePlay()
-        }
-        val pause = binding.buttonPause
-        pause.setOnClickListener {
-            is_playing_desired = false
-            nativePause()
-        }
-
-        // Start with disabled buttons, until native code is initialized
-        play.isEnabled = false
-        pause.isEnabled = false
         nativeInit()
 
         innitPlayer()
@@ -118,6 +105,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         Log.i(TAG, "innitPlayer")
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
         val streamURL = sharedPreference.getString("savedURL"," ")
+
 
 //        videoController= VideoController(requireActivity())
 //        videoController!!.mSurface=binding.surfaceView
@@ -148,8 +136,11 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 //            Log.i(TAG, p.toString())
 //            Log.i(TAG, p1.toString())
 
+            val pstring = String.format("%.2f", p)
+            val p1string = String.format("%.2f", p1)
+
             //send motor inputs through sockets
-            (activity as MainActivity).client?.write("$p#$p1#")
+            (activity as MainActivity).client?.write("$pstring#$p1string#")
             Log.i(TAG, "$p#$p1" )
         },500)
 
@@ -177,6 +168,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     override fun onDestroyView() {
         Log.i(TAG, "View Destroyed")
         super.onDestroyView()
+        nativeFinalize()
         _binding = null
 
         if (recordToggle) {
@@ -207,9 +199,14 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 
     // Called from native code. This sets the content of the TextView from the UI thread.
     private fun setMessage(message: String) {
-//        val tv = this.findViewById<View>(R.id.textview_message) as TextView
-//        runOnUiThread(Runnable { tv.text = message })
-        //TODO
+        val tv = binding.textView2
+        requireActivity().runOnUiThread(Runnable { tv.text = message })
+    }
+
+    // Set the URI to play, and record whether it is a local or remote file
+    private fun setMediaUri() {
+        mediaUri?.let { nativeSetUri(it) }
+        is_local_media = mediaUri!!.startsWith("file://")
     }
 
     // Called from native code
@@ -243,11 +240,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
             nativePause()
         }
 
-        // Re-enable buttons, now that GStreamer is initialized
-        requireActivity().runOnUiThread {
-            binding.buttonPlay.isEnabled = true
-            binding.buttonPause.isEnabled = true
-        }
     }
 
     // Called from native code when the size of the media changes or is first detected.
