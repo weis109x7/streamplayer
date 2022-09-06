@@ -21,19 +21,12 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private external fun nativeGetGStreamerInfo(): String?
     private external fun nativeInit() // Initialize native code, build pipeline, etc
     private external fun nativeFinalize() // Destroy pipeline and shutdown native code
-    private external fun nativeSetUri(uri: String) // Set the URI of the media to play
     private external fun nativePlay() // Set pipeline to PLAYING
-    private external fun nativeSetPosition(milliseconds: Int) // Seek to the indicated position, in milliseconds
     private external fun nativePause() // Set pipeline to PAUSED
     private external fun nativeSurfaceInit(surface: Any) // A new surface is available
     private external fun nativeSurfaceFinalize() // Surface about to be destroyed
     private val native_custom_data : Long = 0 // Native code will use this to keep private data
     private var is_playing_desired = true // Whether the user asked to go to PLAYING
-    private val position = 0 // Current position, reported by native code
-    private val duration = 0 // Current clip duration, reported by native code
-    private var is_local_media = false // Whether this clip is stored locally or is being streamed
-    private val desired_position = 0 // Position where the users wants to seek to
-    private var mediaUri : String? = null // URI of the clip being played
 
 
     companion object {
@@ -52,7 +45,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
-//    private var videoController: VideoController?=null
 
     private var recordToggle = false
 
@@ -65,36 +57,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        /* View model implementation if using
-//        val homeViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
-//        val textView: TextView = binding.textHome
-//        homeViewModel.text.observe(viewLifecycleOwner) {
-//            textView.text = it
-//        }
-*/
-
-        try {
-            GStreamer.init(requireContext())
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
-        }
-
-
-        val tv = binding.textView2
-        tv.text = "Welcome to " + nativeGetGStreamerInfo() + " !"
-
-        val sv = binding.surfaceVideo
-        val sh = sv.holder
-        sh.addCallback(this)
-
-        if (savedInstanceState != null) {
-            Log.i("GStreamer", "Activity created. Saved state is playing:$is_playing_desired")
-        } else {
-            Log.i("GStreamer", "Activity created. There is no saved state, playing: false")
-        }
-
-        nativeInit()
-
         innitPlayer()
         innitButtons()
 
@@ -104,15 +66,20 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private fun innitPlayer() {
         Log.i(TAG, "innitPlayer")
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
+        // we can use this to get pipeline from settings page and feed it into gstreamer, but I do not know how to do that yet.
+        //TODO
         val streamURL = sharedPreference.getString("savedURL"," ")
 
-
-//        videoController= VideoController(requireActivity())
-//        videoController!!.mSurface=binding.surfaceView
-
-        //create player with media URL
-//        streamURL?.let { videoController!!.createPlayer(it) }
-
+        //init gstreamer
+        try {
+            GStreamer.init(requireContext())
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
+        val sv = binding.surfaceVideo
+        val sh = sv.holder
+        sh.addCallback(this)
+        nativeInit()
     }
 
     private fun innitButtons() {
@@ -139,10 +106,11 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
             val pstring = String.format("%.2f", p)
             val p1string = String.format("%.2f", p1)
 
-            //send motor inputs through sockets
+            //send motor inputs through sockets every 0.5sec
             (activity as MainActivity).client?.write("$pstring#$p1string#")
             Log.i(TAG, "$p#$p1" )
         },500)
+
 
 
         //setup recording button
@@ -151,79 +119,58 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
             if (!recordToggle){
                 recordToggle = true
                 buttonRecord.text = "Stop"
-                activity?.runOnUiThread {
-//                    videoController?.record()
-                }
+                //setup recording function
+                //TODO
             }else{
                 recordToggle = false
                 buttonRecord.text = "Record"
-                activity?.runOnUiThread {
-//                    videoController?.stoprecord()
-                }
+                //setup stop recording function
+                //TODO
             }
         }
     }
 
-
     override fun onDestroyView() {
         Log.i(TAG, "View Destroyed")
         super.onDestroyView()
-        nativeFinalize()
-        _binding = null
 
+        //stop recording before we destroy the video
         if (recordToggle) {
-//            videoController?.stoprecord()
+            //setup stop recording function
+            //TODO
             recordToggle=false
         }
-//        videoController?.releasePlayer()
 
+        //release gstreamer surface
+        nativeFinalize()
+
+        _binding = null
     }
 
     override fun onResume() {
         Log.i(TAG, "on Resume")
         super.onResume()
-
-        //use to hide title bar to maximise screen space
-        (activity as AppCompatActivity?)!!.supportActionBar!!.hide()
     }
 
+
+    //we use these two function to calculate motor signal of the robot
     //normalize function
     private fun normalize(value:Double, min:Double, max:Double, outmin:Double, outmax:Double): Double {
         return ( (value-min)/(max-min) * (outmax-outmin) +outmin)
     }
-
     //ensure range
     private fun ensureRange(value: Double, min: Double, max: Double): Double {
         return value.coerceAtLeast(min).coerceAtMost(max)
     }
 
+
     // Called from native code. This sets the content of the TextView from the UI thread.
     private fun setMessage(message: String) {
-        val tv = binding.textView2
-        requireActivity().runOnUiThread(Runnable { tv.text = message })
-    }
-
-    // Set the URI to play, and record whether it is a local or remote file
-    private fun setMediaUri() {
-        mediaUri?.let { nativeSetUri(it) }
-        is_local_media = mediaUri!!.startsWith("file://")
-    }
-
-    // Called from native code
-    private fun setCurrentPosition(position: Int, duration: Int) {
-//        val sb = this.findViewById<View>(R.id.seek_bar) as SeekBar
-//
-//        // Ignore position messages from the pipeline if the seek bar is being dragged
-//        if (sb.isPressed) return
-//        runOnUiThread(Runnable {
-//            sb.max = duration
-//            sb.progress = position
-//            updateTimeWidget()
-//            sb.isEnabled = duration != 0
-//        })
-//        this.position = position
-//        this.duration = duration
-        //TODO
+        //display msg on a textview for user to understand what is going on in gstreamer
+        val errorlog = binding.errormsglog
+        requireActivity().runOnUiThread {
+            errorlog.text = message
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -240,18 +187,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
             nativePause()
         }
 
-    }
-
-    // Called from native code when the size of the media changes or is first detected.
-    // Inform the video surface about the new size and recalculate the layout.
-    private fun onMediaSizeChanged(width: Int, height: Int) {
-        Log.i("GStreamer", "Media size changed to " + width + "x" + height)
-//        val gsv: GStreamerSurfaceView =
-//            this.findViewById<View>(R.id.surface_video) as GStreamerSurfaceView
-//        gsv.media_width = width
-//        gsv.media_height = height
-//        runOnUiThread(Runnable { gsv.requestLayout() })
-        //TODO
     }
 
     override fun surfaceChanged(

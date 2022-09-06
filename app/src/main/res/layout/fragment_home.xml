@@ -6,15 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
 
-<!--    <org.videolan.libvlc.util.VLCVideoLayout-->
-<!--        android:id="@+id/surfaceView"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_centerInParent="true"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        tools:layout_editor_absoluteX="0dp" >-->
-<!--    </org.videolan.libvlc.util.VLCVideoLayout>-->
-
     <com.htx.streamplayer.ui.home.GStreamerSurfaceView
         android:id="@+id/surface_video"
         android:layout_width="match_parent"
@@ -47,10 +38,11 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
+        android:id="@+id/errormsglog"
+        android:textColor="#92B"
+        android:layout_width="317dp"
+        android:layout_height="96dp"
+        android:text="error msg log"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

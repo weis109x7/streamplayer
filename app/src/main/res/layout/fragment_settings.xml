@@ -6,44 +6,21 @@
     android:layout_height="match_parent"
     tools:context=".ui.settings.GalleryFragment">
 
-    <!--    <TextView-->
-    <!--        android:id="@+id/text_gallery"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginStart="8dp"-->
-    <!--        android:layout_marginTop="8dp"-->
-    <!--        android:layout_marginEnd="8dp"-->
-    <!--        android:textAlignment="center"-->
-    <!--        android:textSize="20sp"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.0"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent"-->
-    <!--        app:layout_constraintVertical_bias="0.955" />-->
-
     <EditText
         android:id="@+id/etURL"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="64dp"
         android:text=""
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <!--    <Button-->
-<!--        android:id="@+id/clientSendBtn"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text=" Test message"-->
-<!--        tools:layout_editor_absoluteX="129dp"-->
-<!--        tools:layout_editor_absoluteY="261dp" />-->
 
     <Button
         android:id="@+id/connectBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginTop="60dp"
+        android:layout_marginEnd="4dp"
         android:text=" Connect "
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/socketURL" />
@@ -52,8 +29,8 @@
         android:id="@+id/closeConnectionBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="60dp"
         android:text=" close "
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/socketURL" />
@@ -62,9 +39,29 @@
         android:id="@+id/socketURL"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="52dp"
         android:text=""
         app:layout_constraintTop_toBottomOf="@+id/etURL"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="16dp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Robot control socket"
+        app:layout_constraintBottom_toTopOf="@+id/socketURL"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Gst Pipeline"
+        app:layout_constraintBottom_toTopOf="@+id/etURL"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

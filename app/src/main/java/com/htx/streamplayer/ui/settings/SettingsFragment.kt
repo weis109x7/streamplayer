@@ -30,14 +30,6 @@ class GalleryFragment : Fragment() {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        /* View model implementation if using
-//        val galleryViewModel = ViewModelProvider(this)[GalleryViewModel::class.java]
-//        val textView: TextView = binding.textGallery
-//        galleryViewModel.text.observe(viewLifecycleOwner) {
-//            textView.text = it
-//        }
-        */
-
         innitButtons()
 
         return root
