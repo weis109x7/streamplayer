@@ -43,6 +43,7 @@ static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
 
+char *custompipeline;
 /*
  * Private methods
  */
@@ -178,9 +179,10 @@ app_function (void *userdata)
     data->context = g_main_context_new ();
     g_main_context_push_thread_default (data->context);
 
+    GST_DEBUG ("custom pipeline string %s", custompipeline);
     /* Build pipeline */
     data->pipeline =
-            gst_parse_launch ("rtspsrc location=rtsp://0.tcp.ap.ngrok.io:11241/test latency=0 buffer-mode=none drop-on-latency=true ! decodebin  ! videoflip method=rotate-180 ! videoconvert ! autovideosink sync=false", //udpsrc port=5200 !  application/x-rtp, encoding-name=JPEG,payload=26 ! rtpjpegdepay ! jpegdec ! autovideosink
+            gst_parse_launch (custompipeline,//"rtspsrc location=rtsp://0.tcp.ap.ngrok.io:11241/test latency=0 buffer-mode=none drop-on-latency=true ! decodebin  ! videoflip method=rotate-180 ! videoconvert ! autovideosink sync=false",
                               &error);
     if (error) {
         gchar *message =
@@ -376,6 +378,14 @@ gst_native_get_gstreamer_info (JNIEnv * env, jobject thiz)
     return version_jstring;
 }
 
+static void
+gst_native_get_pipeline(JNIEnv *env, jobject thiz, jstring pipeline){
+    const char *nativePipelineString = (*env)->GetStringUTFChars(env, pipeline, 0);
+    // use your string
+    custompipeline = nativePipelineString;
+    GST_DEBUG ("native pipeline here %s", custompipeline);
+}
+
 
 
 /* List of implemented native methods */
@@ -388,7 +398,8 @@ static JNINativeMethod native_methods[] = {
                 (void *) gst_native_surface_init},
         {"nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize},
         {"nativeClassInit", "()Z", (void *) gst_native_class_init},
-        {"nativeGetGStreamerInfo", "()Ljava/lang/String;", (void *) gst_native_get_gstreamer_info}
+        {"nativeGetGStreamerInfo", "()Ljava/lang/String;", (void *) gst_native_get_gstreamer_info},
+        {"nativeGetPipeline", "(Ljava/lang/String;)V", (void *) gst_native_get_pipeline}
 };
 
 

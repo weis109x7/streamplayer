@@ -35,21 +35,6 @@ class GalleryFragment : Fragment() {
         return root
     }
 
-
-    override fun onPause() {
-        super.onPause()
-        Log.i(TAG, "on Pause")
-
-        //Save text box contents when leaving the page
-        val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
-        val editor = sharedPreference.edit()
-        editor.putString("savedURL",binding.etURL.text.toString())
-        editor.putString("savedSocket",binding.socketURL.text.toString())
-        editor.apply()
-
-        _binding = null
-    }
-
     private fun innitButtons() {
         Log.i(TAG, "innit buttons")
 
@@ -119,6 +104,23 @@ class GalleryFragment : Fragment() {
             }
 
         }
+    }
+
+    override fun onResume() {
+        Log.i(TAG, "on Resume")
+        super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "on Pause")
+
+        //Save text box contents when leaving the page
+        val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        editor.putString("savedURL",binding.etURL.text.toString())
+        editor.putString("savedSocket",binding.socketURL.text.toString())
+        editor.apply()
     }
 
     override fun onDestroyView() {

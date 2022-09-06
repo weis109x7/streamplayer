@@ -25,6 +25,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private external fun nativePause() // Set pipeline to PAUSED
     private external fun nativeSurfaceInit(surface: Any) // A new surface is available
     private external fun nativeSurfaceFinalize() // Surface about to be destroyed
+    private external fun nativeGetPipeline(pipeline:String) // send pipeline to native code
     private val native_custom_data : Long = 0 // Native code will use this to keep private data
     private var is_playing_desired = true // Whether the user asked to go to PLAYING
 
@@ -67,8 +68,12 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         Log.i(TAG, "innitPlayer")
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
         // we can use this to get pipeline from settings page and feed it into gstreamer, but I do not know how to do that yet.
-        //TODO
         val streamURL = sharedPreference.getString("savedURL"," ")
+        //TODO
+        if (streamURL != null) {
+            Log.i(TAG, "native pipeline kotlin here $streamURL")
+            nativeGetPipeline(streamURL)
+        }
 
         //init gstreamer
         try {
@@ -145,6 +150,11 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         nativeFinalize()
 
         _binding = null
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "on Pause")
     }
 
     override fun onResume() {
