@@ -7,7 +7,7 @@
     tools:context=".ui.settings.GalleryFragment">
 
     <EditText
-        android:id="@+id/etURL"
+        android:id="@+id/gstPipeline"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_marginTop="64dp"
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="52dp"
         android:text=""
-        app:layout_constraintTop_toBottomOf="@+id/etURL"
+        app:layout_constraintTop_toBottomOf="@+id/gstPipeline"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="16dp" />
 
@@ -62,6 +62,6 @@
         android:layout_marginStart="16dp"
         android:layout_marginBottom="16dp"
         android:text="Gst Pipeline"
-        app:layout_constraintBottom_toTopOf="@+id/etURL"
+        app:layout_constraintBottom_toTopOf="@+id/gstPipeline"
         app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

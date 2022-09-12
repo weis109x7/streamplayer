@@ -40,8 +40,8 @@ class GalleryFragment : Fragment() {
 
         //Restore text box from previous session
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
-        val editTextView = binding.etURL
-        editTextView.setText(sharedPreference.getString("savedURL",""))
+        val gstPipeline = binding.gstPipeline
+        gstPipeline.setText(sharedPreference.getString("savedURL",""))
         val socketUrl=binding.socketURL
         socketUrl.setText(sharedPreference.getString("savedSocket",""))
 
@@ -120,7 +120,7 @@ class GalleryFragment : Fragment() {
         //Save text box contents when leaving the page
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
         val editor = sharedPreference.edit()
-        editor.putString("savedURL",binding.etURL.text.toString())
+        editor.putString("savedURL",binding.gstPipeline.text.toString())
         editor.putString("savedSocket",binding.socketURL.text.toString())
         editor.apply()
     }
