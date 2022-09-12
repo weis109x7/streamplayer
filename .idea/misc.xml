@@ -10,17 +10,22 @@
         <entry key="app/src/main/res/drawable/ic_menu_gallery.xml" value="0.207" />
         <entry key="app/src/main/res/drawable/ic_menu_settings.xml" value="0.293" />
         <entry key="app/src/main/res/drawable/ic_menu_slideshow.xml" value="0.291" />
+        <entry key="app/src/main/res/drawable/icon.png_background.xml" value="0.199" />
         <entry key="app/src/main/res/drawable/side_nav_bar.xml" value="0.291" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.27853260869565216" />
-        <entry key="app/src/main/res/layout/app_bar_main.xml" value="0.27853260869565216" />
+        <entry key="app/src/main/res/layout/app_bar_main.xml" value="0.25" />
         <entry key="app/src/main/res/layout/content_main.xml" value="0.27853260869565216" />
         <entry key="app/src/main/res/layout/fragment_gallery.xml" value="0.27853260869565216" />
         <entry key="app/src/main/res/layout/fragment_home.xml" value="0.25" />
         <entry key="app/src/main/res/layout/fragment_settings.xml" value="0.25" />
         <entry key="app/src/main/res/layout/fragment_slideshow.xml" value="0.32653985507246375" />
-        <entry key="app/src/main/res/layout/nav_header_main.xml" value="0.32653985507246375" />
+        <entry key="app/src/main/res/layout/nav_header_main.xml" value="0.33" />
         <entry key="app/src/main/res/menu/activity_main_drawer.xml" value="0.35625" />
         <entry key="app/src/main/res/menu/main.xml" value="0.33" />
+        <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.298" />
+        <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.298" />
+        <entry key="app/src/main/res/mipmap-anydpi-v26/icon.png.xml" value="0.199" />
+        <entry key="app/src/main/res/mipmap-anydpi-v26/icon.png_round.xml" value="0.199" />
       </map>
     </option>
   </component>
