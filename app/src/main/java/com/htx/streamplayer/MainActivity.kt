@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
-    //create a socket class to be used by the applciation
+    //create a socket class to be used by the application
     var client: SocketClient?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {

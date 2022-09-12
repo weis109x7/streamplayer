@@ -419,6 +419,7 @@ JNI_OnLoad (JavaVM * vm, void *reserved)
         return 0;
     }
     jclass klass = (*env)->FindClass (env,
+                                      // link the native code to HomeFragment where we will be using these C function
                                       "com/htx/streamplayer/ui/home/HomeFragment");
     (*env)->RegisterNatives (env, klass, native_methods,
                              G_N_ELEMENTS (native_methods));
