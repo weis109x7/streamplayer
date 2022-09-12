@@ -43,7 +43,7 @@ static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
 
-char *custompipeline;
+char *custompipeline; // "pipeline" to be used in app_function() to create gstreamer video
 /*
  * Private methods
  */
@@ -179,7 +179,7 @@ app_function (void *userdata)
     data->context = g_main_context_new ();
     g_main_context_push_thread_default (data->context);
 
-    GST_DEBUG ("custom pipeline string %s", custompipeline);
+    GST_DEBUG ("custom pipeline string: %s", custompipeline);
     /* Build pipeline */
     data->pipeline =
             gst_parse_launch (custompipeline,//"rtspsrc location=rtsp://0.tcp.ap.ngrok.io:11241/test latency=0 buffer-mode=none drop-on-latency=true ! decodebin  ! videoflip method=rotate-180 ! videoconvert ! autovideosink sync=false",
@@ -369,6 +369,7 @@ gst_native_surface_finalize (JNIEnv * env, jobject thiz)
 }
 
 
+/* Function to get gstreamer version*/
 static jstring
 gst_native_get_gstreamer_info (JNIEnv * env, jobject thiz)
 {
@@ -378,12 +379,13 @@ gst_native_get_gstreamer_info (JNIEnv * env, jobject thiz)
     return version_jstring;
 }
 
+/* Set custom pipeline */
 static void
 gst_native_get_pipeline(JNIEnv *env, jobject thiz, jstring pipeline){
     const char *nativePipelineString = (*env)->GetStringUTFChars(env, pipeline, 0);
-    // use your string
+    // save custom pipeline received from kotlin side to the global variable "custompipeline" so it can be used in app_function()
     custompipeline = nativePipelineString;
-    GST_DEBUG ("native pipeline here %s", custompipeline);
+    GST_DEBUG ("custom pipeline : %s : saved to global variable", custompipeline);
 }
 
 

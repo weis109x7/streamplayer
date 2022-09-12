@@ -53,7 +53,7 @@ class GalleryFragment : Fragment() {
                     val socketString = socketUrl.text.toString().split(":")
                     val addr = socketString[0]
                     val port = socketString[1].toInt()
-                    //create socket
+                    //create socket connection
                     (activity as MainActivity).client = SocketClient(addr,port)
 
                     //show toast if success
@@ -93,8 +93,10 @@ class GalleryFragment : Fragment() {
 
         val closeConnectionBtn = binding.closeConnectionBtn
         closeConnectionBtn.setOnClickListener {
+            //close socket connection
             (activity as MainActivity).client?.closeConnection()
 
+            //show toast closing connecting
             requireActivity().runOnUiThread {
                 Toast.makeText(
                     requireContext(),

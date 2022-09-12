@@ -13,6 +13,8 @@ class SocketClient (address: String, port: Int){
     private val connection: Socket = Socket(address, port)
     private var connected: Boolean = false
 
+
+    //innit socket
     init {
         try {
             println("Init Socket")
@@ -26,13 +28,15 @@ class SocketClient (address: String, port: Int){
     private val reader: Scanner = Scanner(connection.getInputStream())
     private val writer: OutputStream = connection.getOutputStream()
 
-
+    //send msg to socket
     fun write(message: String) {
         thread {
             writer.write((message).toByteArray(Charset.defaultCharset()))
         }
     }
 
+
+    //for now we arent receiving any msg from the robot so this function wont be used.
     fun read() {
 //            thread {
 //                while (connected)
