@@ -11,13 +11,13 @@ import kotlin.concurrent.thread
 class SocketClient (address: String, port: Int){
     private val TAG = "SocketActivity"
     private val connection: Socket = Socket(address, port)
-    private var connected: Boolean = true
+    private var connected: Boolean = false
 
     init {
         try {
             println("Init Socket")
             println("Connected to server at $address on port $port")
-
+            connected = true
         } catch (e : Exception) {
             Log.i(TAG, e.toString())
         }
@@ -42,5 +42,6 @@ class SocketClient (address: String, port: Int){
 
     fun closeConnection(){
         connection.close()
+        connected = false
     }
 }
