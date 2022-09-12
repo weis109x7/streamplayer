@@ -18,7 +18,7 @@ import org.freedesktop.gstreamer.GStreamer
 private const val TAG = "HomeFragmentActivity"
 
 class HomeFragment : Fragment() , SurfaceHolder.Callback {
-    private external fun nativeGetGStreamerInfo(): String?
+    private external fun nativeGetGStreamerInfo(): String? //Get Gstreamer version, a basic function to test if gstreamer is working or not
     private external fun nativeInit() // Initialize native code, build pipeline, etc
     private external fun nativeFinalize() // Destroy pipeline and shutdown native code
     private external fun nativePlay() // Set pipeline to PLAYING
@@ -27,10 +27,10 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private external fun nativeSurfaceFinalize() // Surface about to be destroyed
     private external fun nativeGetPipeline(pipeline:String) // send pipeline to native code
     private val native_custom_data : Long = 0 // Native code will use this to keep private data
-    private var is_playing_desired = true // Whether the user asked to go to PLAYING
+    private var is_playing_desired = true // Whether the user asked to go to PLAYING ( it will always be true as a livestream wont be stopped )
 
 
-    companion object {
+    companion object { //init gstreamer library
         @JvmStatic
         private external fun nativeClassInit(): Boolean // Initialize native class: cache Method IDs for callbacks
 
@@ -66,16 +66,17 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 
     private fun innitPlayer() {
         Log.i(TAG, "innitPlayer")
+
+        //using shared preference to get gstreamer pipeline from settings fragment
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
-        // we can use this to get pipeline from settings page and feed it into gstreamer, but I do not know how to do that yet.
         val streamURL = sharedPreference.getString("savedURL"," ")
-        //TODO
         if (streamURL != null) {
-            Log.i(TAG, "native pipeline kotlin here $streamURL")
+            Log.i(TAG, "Pipeline sent to C code: $streamURL")
+            // ww use this function to set the pipeline on the c side
             nativeGetPipeline(streamURL)
         }
 
-        //init gstreamer
+        //init gstreamer player
         try {
             GStreamer.init(requireContext())
         } catch (e: Exception) {
@@ -90,6 +91,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private fun innitButtons() {
         Log.i(TAG, "InnitButtons")
 
+        // joystick controls from "https://github.com/controlwear/virtual-joystick-android"
         val joystick = binding.joystick
         joystick.setOnMoveListener ({ angle, strength ->
             //will keep running while joystick is pressed
@@ -135,11 +137,21 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         }
     }
 
+    //we use these two function to calculate motor signal of the robot
+    //normalize function
+    private fun normalize(value:Double, min:Double, max:Double, outmin:Double, outmax:Double): Double {
+        return ( (value-min)/(max-min) * (outmax-outmin) +outmin)
+    }
+    //ensure range
+    private fun ensureRange(value: Double, min: Double, max: Double): Double {
+        return value.coerceAtLeast(min).coerceAtMost(max)
+    }
+
     override fun onDestroyView() {
         Log.i(TAG, "View Destroyed")
         super.onDestroyView()
 
-        //stop recording before we destroy the video
+        //stop recording before we destroy the view
         if (recordToggle) {
             //setup stop recording function
             //TODO
@@ -163,17 +175,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     }
 
 
-    //we use these two function to calculate motor signal of the robot
-    //normalize function
-    private fun normalize(value:Double, min:Double, max:Double, outmin:Double, outmax:Double): Double {
-        return ( (value-min)/(max-min) * (outmax-outmin) +outmin)
-    }
-    //ensure range
-    private fun ensureRange(value: Double, min: Double, max: Double): Double {
-        return value.coerceAtLeast(min).coerceAtMost(max)
-    }
-
-
     // Called from native code. This sets the content of the TextView from the UI thread.
     private fun setMessage(message: String) {
         //display msg on a textview for user to understand what is going on in gstreamer
@@ -185,12 +186,13 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 
     override fun onSaveInstanceState(outState: Bundle) {
         Log.d("GStreamer", "Saving state, playing:$is_playing_desired")
+        //save playing state when leaving HomeFragment, but in our case video will always be playing.
         outState.putBoolean("playing", is_playing_desired)
     }
 
     private fun onGStreamerInitialized() {
         Log.i("GStreamer", "Gst initialized. Restoring state, playing:$is_playing_desired")
-        // Restore previous playing state
+        // Restore previous playing state, but in our case video will always be playing
         if (is_playing_desired) {
             nativePlay()
         } else {
@@ -199,6 +201,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 
     }
 
+    //update video surface when aspect ratio is changed. eg, landscape/portrait view
     override fun surfaceChanged(
         holder: SurfaceHolder, format: Int, width: Int,
         height: Int
