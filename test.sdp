@@ -1,2 +1,0 @@
-m=video 5200 RTP/AVP 26
-a=rtpmap:26 JPEG/90000
