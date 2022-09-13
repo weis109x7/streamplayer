@@ -381,7 +381,7 @@ gst_native_get_gstreamer_info (JNIEnv * env, jobject thiz)
 
 /* Set custom pipeline */
 static void
-gst_native_get_pipeline(JNIEnv *env, jobject thiz, jstring pipeline){
+gst_native_set_pipeline(JNIEnv *env, jobject thiz, jstring pipeline){
     const char *nativePipelineString = (*env)->GetStringUTFChars(env, pipeline, 0);
     // save custom pipeline received from kotlin side to the global variable "custompipeline" so it can be used in app_function()
     custompipeline = nativePipelineString;
@@ -401,7 +401,7 @@ static JNINativeMethod native_methods[] = {
         {"nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize},
         {"nativeClassInit", "()Z", (void *) gst_native_class_init},
         {"nativeGetGStreamerInfo", "()Ljava/lang/String;", (void *) gst_native_get_gstreamer_info},
-        {"nativeGetPipeline", "(Ljava/lang/String;)V", (void *) gst_native_get_pipeline}
+        {"nativeSetPipeline", "(Ljava/lang/String;)V", (void *) gst_native_set_pipeline}
 };
 
 

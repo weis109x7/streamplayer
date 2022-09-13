@@ -25,7 +25,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private external fun nativePause() // Set pipeline to PAUSED
     private external fun nativeSurfaceInit(surface: Any) // A new surface is available
     private external fun nativeSurfaceFinalize() // Surface about to be destroyed
-    private external fun nativeGetPipeline(pipeline:String) // send pipeline to native code
+    private external fun nativeSetPipeline(pipeline:String) // send pipeline to native code
     private val native_custom_data : Long = 0 // Native code will use this to keep private data
     private var is_playing_desired = true // Whether the user asked to go to PLAYING ( it will always be true as a livestream wont be stopped )
 
@@ -73,7 +73,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         if (streamURL != null) {
             Log.i(TAG, "Pipeline sent to C code: $streamURL")
             // ww use this function to set the pipeline on the c side
-            nativeGetPipeline(streamURL)
+            nativeSetPipeline(streamURL)
         }
 
         //init gstreamer player
