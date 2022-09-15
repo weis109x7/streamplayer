@@ -8,7 +8,6 @@ import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.htx.streamplayer.MainActivity
 import com.htx.streamplayer.databinding.FragmentHomeBinding
@@ -27,7 +26,7 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private external fun nativeSurfaceFinalize() // Surface about to be destroyed
     private external fun nativeSetPipeline(pipeline:String) // send pipeline to native code
     private val native_custom_data : Long = 0 // Native code will use this to keep private data
-    private var is_playing_desired = true // Whether the user asked to go to PLAYING ( it will always be true as a livestream wont be stopped )
+//    private var is_playing_desired = true // Whether the user asked to go to PLAYING ( it will always be true as a livestream wont be stopped )
 
 
     companion object { //init gstreamer library
@@ -124,15 +123,13 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         val buttonRecord = binding.Record
         buttonRecord.setOnClickListener {
             if (!recordToggle){
-                recordToggle = true
                 buttonRecord.text = "Stop"
-                //setup recording function
-                //TODO
+                //start record
+                startRecord()
             }else{
-                recordToggle = false
                 buttonRecord.text = "Record"
-                //setup stop recording function
-                //TODO
+                //stop record
+                stopRecord()
             }
         }
     }
@@ -154,14 +151,31 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         //stop recording before we destroy the view
         if (recordToggle) {
             //setup stop recording function
-            //TODO
-            recordToggle=false
+            stopRecord()
         }
-
-        //release gstreamer surface
+        //release gstreamer
         nativeFinalize()
 
         _binding = null
+    }
+
+    private fun startRecord(){
+        recordToggle=true
+        //TODO
+    }
+
+    private fun stopRecord(){
+        recordToggle=false
+        //TODO
+    }
+
+    // Called from native code. This sets the content of the TextView from the UI thread.
+    private fun setMessage(message: String) {
+        //display msg on a textview for user to understand what is going on in gstreamer
+        val errorlog = binding.errormsglog
+        requireActivity().runOnUiThread {
+            errorlog.text = message
+        }
     }
 
     override fun onPause() {
@@ -174,31 +188,14 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         super.onResume()
     }
 
-
-    // Called from native code. This sets the content of the TextView from the UI thread.
-    private fun setMessage(message: String) {
-        //display msg on a textview for user to understand what is going on in gstreamer
-        val errorlog = binding.errormsglog
-        requireActivity().runOnUiThread {
-            errorlog.text = message
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
-        Log.d("GStreamer", "Saving state, playing:$is_playing_desired")
-        //save playing state when leaving HomeFragment, but in our case video will always be playing.
-        outState.putBoolean("playing", is_playing_desired)
+//        Log.d("GStreamer", "Saving state, playing:$is_playing_desired")
     }
 
     private fun onGStreamerInitialized() {
-        Log.i("GStreamer", "Gst initialized. Restoring state, playing:$is_playing_desired")
-        // Restore previous playing state, but in our case video will always be playing
-        if (is_playing_desired) {
-            nativePlay()
-        } else {
-            nativePause()
-        }
-
+//        Log.i("GStreamer", "Gst initialized. Restoring state, playing:$is_playing_desired")
+        // Start playing everytime Gstreamer is initialized
+        nativePlay()
     }
 
     //update video surface when aspect ratio is changed. eg, landscape/portrait view
@@ -219,6 +216,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         Log.d("GStreamer", "Surface destroyed")
-        nativeSurfaceFinalize()
+        nativeSurfaceFinalize() //release gstreamer surface
     }
 }
