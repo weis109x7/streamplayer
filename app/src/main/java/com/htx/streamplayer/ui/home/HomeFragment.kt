@@ -1,17 +1,21 @@
 package com.htx.streamplayer.ui.home
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.SurfaceHolder
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
+import androidx.core.view.drawToBitmap
 import androidx.fragment.app.Fragment
 import com.htx.streamplayer.MainActivity
 import com.htx.streamplayer.databinding.FragmentHomeBinding
 import org.freedesktop.gstreamer.GStreamer
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.*
 
 
 private const val TAG = "HomeFragmentActivity"
@@ -45,6 +49,8 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
+    var sv: TextureView ?= null
+    var surface: Surface ?= null
 
     private var recordToggle = false
 
@@ -81,9 +87,13 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         } catch (e: Exception) {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
-        val sv = binding.surfaceVideo
-        val sh = sv.holder
-        sh.addCallback(this)
+//        val sv = binding.surfaceVideo
+////        val sh = sv.holder
+////        sh.addCallback(this)
+//
+//        val surface = Surface(sv.surfaceTexture)
+//        nativeSurfaceInit(surface)
+
         nativeInit()
     }
 
@@ -162,11 +172,74 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private fun startRecord(){
         recordToggle=true
         //TODO
+        sv = binding.surfaceVideo
+//        val sh = sv.holder
+//        sh.addCallback(this)
+
+        surface = Surface(sv!!.surfaceTexture)
+        nativeSurfaceInit(surface!!)
+
+//        val sv = binding.surfaceVideo
+//        val sh = sv.holder
+//
+//        Log.e("surfacedebug", "surfacevideo: $sv")
+//        Log.e("surfacedebug", "surfaceholder: $sh")
+//        Log.e("surfacedebug", "surfaceholder surface: ${sh.surface}")
+//
+//        Log.e("surfacedebug", "Image Captured: " + sv.drawToBitmap())
+//        Log.e("surfacedebug", "Image pixel colour: " + sv.drawToBitmap().getPixel(10,10))
+//        storeImage(sv.bitmap)
+    }
+
+    private fun storeImage(image: Bitmap) {
+        val pictureFile: File? = getOutputMediaFile()
+        if (pictureFile == null) {
+            Log.d(
+                TAG,
+                "Error creating media file, check storage permissions: "
+            ) // e.getMessage());
+            return
+        }
+        try {
+            val fos = FileOutputStream(pictureFile)
+            image.compress(Bitmap.CompressFormat.PNG, 90, fos)
+            fos.close()
+        } catch (e: FileNotFoundException) {
+            Log.d(TAG, "File not found: " + e.message)
+        } catch (e: IOException) {
+            Log.d(TAG, "Error accessing file: " + e.message)
+        }
+    }
+
+    /** Create a File for saving an image or video  */
+    private fun getOutputMediaFile(): File? {
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+        val mediaStorageDir = File(
+            "/storage/emulated/0/Download/mydir/"
+        )
+
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                return null
+            }
+        }
+        // Create a media file name
+        val timeStamp: String = System.currentTimeMillis().toString()
+        val mediaFile: File
+        val mImageName = "MI_$timeStamp.png"
+        mediaFile = File(mediaStorageDir.path + File.separator + mImageName)
+        return mediaFile
     }
 
     private fun stopRecord(){
         recordToggle=false
         //TODO
+        sv?.bitmap?.let { storeImage(it) }
     }
 
     // Called from native code. This sets the content of the TextView from the UI thread.
