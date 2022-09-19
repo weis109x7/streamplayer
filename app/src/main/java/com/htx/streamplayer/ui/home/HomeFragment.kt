@@ -151,7 +151,8 @@ class HomeFragment : Fragment() {
             if (!recordToggle){
                 buttonRecord.text = "Stop"
                 //start record
-                startRecord()
+                val sv = binding.surfaceVideo
+                startRecord(sv)
             }else{
                 buttonRecord.text = "Record"
                 //stop record
@@ -185,20 +186,10 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 
-    private fun startRecord(){
+    private fun startRecord(textureView: TextureView){
         recordToggle=true
         //TODO
-
-//        val sv = binding.surfaceVideo
-//        val sh = sv.holder
-//
-//        Log.e("surfacedebug", "surfacevideo: $sv")
-//        Log.e("surfacedebug", "surfaceholder: $sh")
-//        Log.e("surfacedebug", "surfaceholder surface: ${sh.surface}")
-//
-//        Log.e("surfacedebug", "Image Captured: " + sv.drawToBitmap())
-//        Log.e("surfacedebug", "Image pixel colour: " + sv.drawToBitmap().getPixel(10,10))
-//        storeImage(sv.bitmap)
+        storeImage(textureView.bitmap!!)
     }
 
     private fun storeImage(image: Bitmap) {
