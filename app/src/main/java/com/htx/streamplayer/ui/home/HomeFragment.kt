@@ -2,11 +2,12 @@ package com.htx.streamplayer.ui.home
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.view.TextureView.SurfaceTextureListener
 import android.widget.Toast
-import androidx.core.view.drawToBitmap
 import androidx.fragment.app.Fragment
 import com.htx.streamplayer.MainActivity
 import com.htx.streamplayer.databinding.FragmentHomeBinding
@@ -20,7 +21,7 @@ import java.util.*
 
 private const val TAG = "HomeFragmentActivity"
 
-class HomeFragment : Fragment() , SurfaceHolder.Callback {
+class HomeFragment : Fragment() {
     private external fun nativeGetGStreamerInfo(): String? //Get Gstreamer version, a basic function to test if gstreamer is working or not
     private external fun nativeInit() // Initialize native code, build pipeline, etc
     private external fun nativeFinalize() // Destroy pipeline and shutdown native code
@@ -48,9 +49,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
-
-    var sv: TextureView ?= null
-    var surface: Surface ?= null
 
     private var recordToggle = false
 
@@ -87,14 +85,32 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
         } catch (e: Exception) {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
-//        val sv = binding.surfaceVideo
-////        val sh = sv.holder
-////        sh.addCallback(this)
-//
-//        val surface = Surface(sv.surfaceTexture)
-//        nativeSurfaceInit(surface)
 
         nativeInit()
+
+        val sv = binding.surfaceVideo
+        sv.surfaceTextureListener = object : SurfaceTextureListener {
+            override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+                Log.d("GStreamer", "Surface created: $surface")
+                val mSurface = Surface(surface)
+                nativeSurfaceInit(mSurface)
+            }
+
+            //update video surface when aspect ratio is changed. eg, landscape/portrait view
+            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+                Log.d(
+                    "GStreamer", "Surface changed to format " + "format" + " width "
+                            + width + " height " + height
+                )
+            }
+
+            override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+                Log.d("GStreamer", "Surface destroyed")
+                nativeSurfaceFinalize() //release gstreamer surface
+                return true
+            }
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
+        }
     }
 
     private fun innitButtons() {
@@ -172,12 +188,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private fun startRecord(){
         recordToggle=true
         //TODO
-        sv = binding.surfaceVideo
-//        val sh = sv.holder
-//        sh.addCallback(this)
-
-        surface = Surface(sv!!.surfaceTexture)
-        nativeSurfaceInit(surface!!)
 
 //        val sv = binding.surfaceVideo
 //        val sh = sv.holder
@@ -239,7 +249,6 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
     private fun stopRecord(){
         recordToggle=false
         //TODO
-        sv?.bitmap?.let { storeImage(it) }
     }
 
     // Called from native code. This sets the content of the TextView from the UI thread.
@@ -269,26 +278,5 @@ class HomeFragment : Fragment() , SurfaceHolder.Callback {
 //        Log.i("GStreamer", "Gst initialized. Restoring state, playing:$is_playing_desired")
         // Start playing everytime Gstreamer is initialized
         nativePlay()
-    }
-
-    //update video surface when aspect ratio is changed. eg, landscape/portrait view
-    override fun surfaceChanged(
-        holder: SurfaceHolder, format: Int, width: Int,
-        height: Int
-    ) {
-        Log.d(
-            "GStreamer", "Surface changed to format " + format + " width "
-                    + width + " height " + height
-        )
-        nativeSurfaceInit(holder.surface)
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        Log.d("GStreamer", "Surface created: " + holder.surface)
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        Log.d("GStreamer", "Surface destroyed")
-        nativeSurfaceFinalize() //release gstreamer surface
     }
 }
