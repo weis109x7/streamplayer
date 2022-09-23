@@ -15,3 +15,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "StreamPlayer"
 include ':app'
+include ':opencvSdk'
+include ':opencvSdk'

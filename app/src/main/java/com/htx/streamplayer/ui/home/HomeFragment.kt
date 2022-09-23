@@ -10,18 +10,22 @@ import android.view.TextureView.SurfaceTextureListener
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.htx.streamplayer.MainActivity
+import com.htx.streamplayer.ObjectDetectorHelper
 import com.htx.streamplayer.databinding.FragmentHomeBinding
 import org.freedesktop.gstreamer.GStreamer
+import org.opencv.android.OpenCVLoader.*
+import org.tensorflow.lite.task.gms.vision.detector.Detection
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.Executors
 
 
 private const val TAG = "HomeFragmentActivity"
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     private external fun nativeGetGStreamerInfo(): String? //Get Gstreamer version, a basic function to test if gstreamer is working or not
     private external fun nativeInit() // Initialize native code, build pipeline, etc
     private external fun nativeFinalize() // Destroy pipeline and shutdown native code
@@ -49,6 +53,7 @@ class HomeFragment : Fragment() {
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
+    private lateinit var objectDetectorHelper: ObjectDetectorHelper
 
     private var recordToggle = false
 
@@ -60,6 +65,11 @@ class HomeFragment : Fragment() {
         Log.i(TAG, "Create View")
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        objectDetectorHelper = ObjectDetectorHelper(
+            context = requireContext(),
+            objectDetectorListener = this)
+
 
         innitPlayer()
         innitButtons()
@@ -190,6 +200,7 @@ class HomeFragment : Fragment() {
         recordToggle=true
         //TODO
         storeImage(textureView.bitmap!!)
+        objectDetectorHelper.detect(textureView.bitmap!!, 0)
     }
 
     private fun storeImage(image: Bitmap) {
@@ -269,5 +280,41 @@ class HomeFragment : Fragment() {
 //        Log.i("GStreamer", "Gst initialized. Restoring state, playing:$is_playing_desired")
         // Start playing everytime Gstreamer is initialized
         nativePlay()
+    }
+
+    // Update UI after objects have been detected. Extracts original image height/width
+    // to scale and place bounding boxes properly through OverlayView
+    override fun onResults(
+        results: MutableList<Detection>?,
+        inferenceTime: Long,
+        imageHeight: Int,
+        imageWidth: Int
+    ) {
+        activity?.runOnUiThread {
+            Log.i("objectdetect", "Results done")
+            Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
+            Log.i("objectdetect", "$results")
+        }
+    }
+
+    override fun onError(error: String) {
+        activity?.runOnUiThread {
+            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onInitialized() {
+        Log.i(TAG, "object detector inited")
+        objectDetectorHelper.setupObjectDetector()
+        // Initialize our background executor
+//        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        // Wait for the views to be properly laid out
+//        fragmentCameraBinding.viewFinder.post {
+            // Set up the camera and its use cases
+//            setUpCamera()
+//        }
+
+//        fragmentCameraBinding.progressCircular.visibility = View.GONE
     }
 }
