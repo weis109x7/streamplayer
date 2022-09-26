@@ -55,6 +55,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
 
     private var recordToggle = false
+    private var objToggle = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -168,6 +169,21 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 stopRecord()
             }
         }
+
+        //setup object detect button
+        val buttonObjDetect = binding.ObjDetect
+        buttonObjDetect.setOnClickListener {
+            if (!objToggle){
+                buttonObjDetect.text = "Obj Off"
+                //start record
+                val sv = binding.surfaceVideo
+                startDetect(sv)
+            }else{
+                buttonObjDetect.text = "Obj On"
+                //stop record
+                stopDetect()
+            }
+        }
     }
 
     //we use these two function to calculate motor signal of the robot
@@ -198,8 +214,8 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     private fun startRecord(textureView: TextureView){
         recordToggle=true
         //TODO
-//        storeImage(textureView.bitmap!!)
-        objectDetectorHelper.detect(textureView.bitmap!!, 0)
+        storeImage(textureView.bitmap!!)
+//        objectDetectorHelper.detect(textureView.bitmap!!, 0)
     }
 
     private fun storeImage(image: Bitmap) {
@@ -252,6 +268,17 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         //TODO
     }
 
+    private fun startDetect(textureView: TextureView){
+        objToggle=true
+        //TODO
+        objectDetectorHelper.detect(textureView.bitmap!!, 0)
+    }
+
+    private fun stopDetect(){
+        objToggle=false
+        //TODO
+    }
+
     // Called from native code. This sets the content of the TextView from the UI thread.
     private fun setMessage(message: String) {
         //display msg on a textview for user to understand what is going on in gstreamer
@@ -289,13 +316,23 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         imageHeight: Int,
         imageWidth: Int
     ) {
-        activity?.runOnUiThread {
-            Log.i("objectdetect", "Results done")
-            Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
-            Log.i("objectdetect", "$results")
+        Log.i("objectdetect", "Results done")
+        Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
+        Log.i("objectdetect", "$results")
 
-            val errorlog = binding.errormsglog
-            errorlog.text = results.toString()
+        val errorlog = binding.errormsglog
+        errorlog.text = results.toString()
+
+        activity?.runOnUiThread {
+            // Pass necessary information to OverlayView for drawing on the canvas
+            binding.overlay.setResults(
+                results ?: LinkedList<Detection>(),
+                imageHeight,
+                imageWidth
+            )
+
+            // Force a redraw
+            binding.overlay.invalidate()
         }
     }
 
