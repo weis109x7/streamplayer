@@ -199,7 +199,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     private fun startRecord(textureView: TextureView){
         recordToggle=true
         //TODO
-        storeImage(textureView.bitmap!!)
+//        storeImage(textureView.bitmap!!)
         objectDetectorHelper.detect(textureView.bitmap!!, 0)
     }
 
@@ -294,6 +294,9 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
             Log.i("objectdetect", "Results done")
             Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
             Log.i("objectdetect", "$results")
+
+            val errorlog = binding.errormsglog
+            errorlog.text = results.toString()
         }
     }
 
