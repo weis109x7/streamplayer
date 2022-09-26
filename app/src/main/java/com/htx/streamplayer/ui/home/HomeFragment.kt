@@ -13,7 +13,6 @@ import com.htx.streamplayer.MainActivity
 import com.htx.streamplayer.ObjectDetectorHelper
 import com.htx.streamplayer.databinding.FragmentHomeBinding
 import org.freedesktop.gstreamer.GStreamer
-import org.opencv.android.OpenCVLoader.*
 import org.tensorflow.lite.task.gms.vision.detector.Detection
 import java.io.File
 import java.io.FileNotFoundException
