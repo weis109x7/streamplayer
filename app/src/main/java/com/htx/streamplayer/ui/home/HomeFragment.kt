@@ -19,7 +19,6 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
-import java.util.concurrent.Executors
 
 
 private const val TAG = "HomeFragmentActivity"
@@ -70,7 +69,6 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
             context = requireContext(),
             objectDetectorListener = this)
 
-
         innitPlayer()
         innitButtons()
 
@@ -101,7 +99,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         val sv = binding.surfaceVideo
         sv.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-                Log.d("GStreamer", "Surface created: $surface")
+                Log.d("GStreamer", "Surface created: $surface with with of $width + height of $height")
                 val mSurface = Surface(surface)
                 nativeSurfaceInit(mSurface)
             }
@@ -119,7 +117,11 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 nativeSurfaceFinalize() //release gstreamer surface
                 return true
             }
-            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+                if (objToggle) {
+                    detectObj(sv)
+                }
+            }
         }
     }
 
@@ -131,26 +133,25 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         joystick.setOnMoveListener ({ angle, strength ->
             //will keep running while joystick is pressed
             Log.i(TAG, "angle is $angle strength is $strength")
-            val x = strength * kotlin.math.cos(Math.toRadians(angle.toDouble()))
-            val y = strength * kotlin.math.sin(Math.toRadians(angle.toDouble()))
-            Log.i(TAG, "cartesian X $x")
-            Log.i(TAG, "cartesian Y $y")
-
+            var x = strength * kotlin.math.cos(Math.toRadians(angle.toDouble()))
+            var y = strength * kotlin.math.sin(Math.toRadians(angle.toDouble()))
+//            Log.i(TAG, "cartesian X $x")
+//            Log.i(TAG, "cartesian Y $y")
+//            x = ensureRange(normalize(x,-100.0,100.0,-129.0,129.0),-127.0,127.0)
+//            y = ensureRange(normalize(y,-100.0,100.0,129.0,-129.0),-127.0,127.0)
 
             //convert x y values to servo motor inputs
             var p = y+x
-            p = normalize(ensureRange(p,-100.0,100.0),-100.0,100.0,2.0,12.0)
+            p = normalize(ensureRange(p,-99.0,99.0),-100.0,100.0,2.0,12.0)
             var p1 = y-x
-            p1 = normalize(ensureRange(p1,-100.0,100.0),-100.0,100.0,12.0,2.0)
-//            Log.i(TAG, p.toString())
-//            Log.i(TAG, p1.toString())
+            p1 = normalize(ensureRange(p1,-99.0,99.0),-100.0,100.0,12.0,2.0)
 
             val pstring = String.format("%.2f", p)
             val p1string = String.format("%.2f", p1)
 
             //send motor inputs through sockets every 0.5sec
             (activity as MainActivity).client?.write("$pstring#$p1string#")
-            Log.i(TAG, "$p#$p1" )
+            Log.i(TAG, "$pstring#$p1string" )
         },500)
 
 
@@ -175,12 +176,11 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         buttonObjDetect.setOnClickListener {
             if (!objToggle){
                 buttonObjDetect.text = "Obj Off"
-                //start record
-                val sv = binding.surfaceVideo
-                startDetect(sv)
+                //start detect
+                startDetect()
             }else{
                 buttonObjDetect.text = "Obj On"
-                //stop record
+                //stop detect
                 stopDetect()
             }
         }
@@ -204,6 +204,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         if (recordToggle) {
             //setup stop recording function
             stopRecord()
+            stopDetect()
         }
         //release gstreamer
         nativeFinalize()
@@ -268,15 +269,27 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         //TODO
     }
 
-    private fun startDetect(textureView: TextureView){
-        objToggle=true
-        //TODO
+    private fun detectObj(textureView: TextureView){
         objectDetectorHelper.detect(textureView.bitmap!!, 0)
     }
 
+    private fun startDetect(){
+        objToggle=true
+    }
     private fun stopDetect(){
         objToggle=false
-        //TODO
+
+        activity?.runOnUiThread {
+            // Pass necessary information to OverlayView for drawing on the canvas
+            binding.overlay.setResults(
+                null ?: LinkedList<Detection>(),
+                0,
+                0
+            )
+            // Force a redraw
+            binding.overlay.invalidate()
+        }
+
     }
 
     // Called from native code. This sets the content of the TextView from the UI thread.
