@@ -7,9 +7,9 @@ import java.nio.charset.Charset
 import java.util.*
 import kotlin.concurrent.thread
 
+private const val TAG = "SocketActivity"
 
 class SocketClient (address: String, port: Int){
-    private val TAG = "SocketActivity"
     private val connection: Socket = Socket(address, port)
     private var connected: Boolean = false
 
@@ -44,8 +44,12 @@ class SocketClient (address: String, port: Int){
 //            }
     }
 
-    fun closeConnection(){
-        connection.close()
-        connected = false
+    fun closeConnection(): Boolean {
+        return if (connected){
+            connection.close()
+            connected = false
+            true
+        } else
+            false
     }
 }

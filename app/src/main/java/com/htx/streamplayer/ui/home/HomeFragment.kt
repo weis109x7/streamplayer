@@ -20,7 +20,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
 
-
 private const val TAG = "HomeFragmentActivity"
 
 class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
@@ -33,13 +32,11 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     private external fun nativeSurfaceFinalize() // Surface about to be destroyed
     private external fun nativeSetPipeline(pipeline:String) // send pipeline to native code
     private val native_custom_data : Long = 0 // Native code will use this to keep private data
-//    private var is_playing_desired = true // Whether the user asked to go to PLAYING ( it will always be true as a livestream wont be stopped )
 
 
     companion object { //init gstreamer library
         @JvmStatic
         private external fun nativeClassInit(): Boolean // Initialize native class: cache Method IDs for callbacks
-
         init {
             System.loadLibrary("gstreamer_android")
             System.loadLibrary("streamplayer")
@@ -61,10 +58,11 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.i(TAG, "Create View")
+        Log.i(TAG, "on Create View")
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        //init object detection model
         objectDetectorHelper = ObjectDetectorHelper(
             context = requireContext(),
             objectDetectorListener = this)
@@ -83,7 +81,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         val streamURL = sharedPreference.getString("savedURL"," ")
         if (streamURL != null) {
             Log.i(TAG, "Pipeline sent to C code: $streamURL")
-            // ww use this function to set the pipeline on the c side
+            // we use this function to set the pipeline on the c side
             nativeSetPipeline(streamURL)
         }
 
@@ -93,7 +91,6 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         } catch (e: Exception) {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
-
         nativeInit()
 
         val sv = binding.surfaceVideo
@@ -101,7 +98,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                 Log.d("GStreamer", "Surface created: $surface with with of $width + height of $height")
                 val mSurface = Surface(surface)
-                nativeSurfaceInit(mSurface)
+                nativeSurfaceInit(mSurface) //init surface for gstreamer to display video
             }
 
             //update video surface when aspect ratio is changed. eg, landscape/portrait view
@@ -117,8 +114,11 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 nativeSurfaceFinalize() //release gstreamer surface
                 return true
             }
+
             override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+                //if object detection is turned on. run object detection function
                 if (objToggle) {
+                    //run on every frame
                     detectObj(sv)
                 }
             }
@@ -137,26 +137,25 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
             var y = strength * kotlin.math.sin(Math.toRadians(angle.toDouble()))
 //            Log.i(TAG, "cartesian X $x")
 //            Log.i(TAG, "cartesian Y $y")
-//            x = ensureRange(normalize(x,-100.0,100.0,-129.0,129.0),-127.0,127.0)
-//            y = ensureRange(normalize(y,-100.0,100.0,129.0,-129.0),-127.0,127.0)
 
             //convert x y values to servo motor inputs
-            var p = y+x
-            p = normalize(ensureRange(p,-99.0,99.0),-100.0,100.0,2.0,12.0)
-            var p1 = y-x
-            p1 = normalize(ensureRange(p1,-99.0,99.0),-100.0,100.0,12.0,2.0)
+            var leftmotor = y+x
+            leftmotor = normalize(ensureRange(leftmotor,-99.0,99.0),-100.0,100.0,2.0,12.0)
+            var rightmotor = y-x
+            rightmotor = normalize(ensureRange(rightmotor,-99.0,99.0),-100.0,100.0,12.0,2.0)
 
-            val pstring = String.format("%.2f", p)
-            val p1string = String.format("%.2f", p1)
+            val leftmotorstring = String.format("%.2f", leftmotor)
+            val rightmotorstring = String.format("%.2f", rightmotor)
 
             //send motor inputs through sockets every 0.5sec
-            (activity as MainActivity).client?.write("$pstring#$p1string#")
-            Log.i(TAG, "$pstring#$p1string" )
+            (activity as MainActivity).client?.write("$leftmotorstring#$rightmotorstring#")
+            Log.i(TAG, "$leftmotorstring#$rightmotorstring#" )
         },500)
 
 
 
         //setup recording button
+        //TODO for now recording button only takes a snapshot everytime it turns on.
         val buttonRecord = binding.Record
         buttonRecord.setOnClickListener {
             if (!recordToggle){
@@ -194,22 +193,6 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     //ensure range
     private fun ensureRange(value: Double, min: Double, max: Double): Double {
         return value.coerceAtLeast(min).coerceAtMost(max)
-    }
-
-    override fun onDestroyView() {
-        Log.i(TAG, "View Destroyed")
-        super.onDestroyView()
-
-        //stop recording before we destroy the view
-        if (recordToggle) {
-            //setup stop recording function
-            stopRecord()
-            stopDetect()
-        }
-        //release gstreamer
-        nativeFinalize()
-
-        _binding = null
     }
 
     private fun startRecord(textureView: TextureView){
@@ -270,6 +253,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     }
 
     private fun detectObj(textureView: TextureView){
+        //convert texture view to bitmap, send bitmap to object detection
         objectDetectorHelper.detect(textureView.bitmap!!, 0)
     }
 
@@ -280,7 +264,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         objToggle=false
 
         activity?.runOnUiThread {
-            // Pass necessary information to OverlayView for drawing on the canvas
+            //clear overlay when detection is stopped
             binding.overlay.setResults(
                 null ?: LinkedList<Detection>(),
                 0,
@@ -299,6 +283,23 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         requireActivity().runOnUiThread {
             errorlog.text = message
         }
+    }
+
+    override fun onDestroyView() {
+        Log.i(TAG, "View Destroyed")
+        super.onDestroyView()
+
+        //stop recording and object detection before we destroy the view
+        if (recordToggle) {
+            stopRecord()
+            stopDetect()
+        }
+        //release gstreamer
+        nativeFinalize()
+
+        //gstreamer surface destruction is handled by surfaceTextureListener
+
+        _binding = null
     }
 
     override fun onPause() {
@@ -333,6 +334,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
         Log.i("objectdetect", "$results")
 
+        //send results to be displayed on errorlog for debugging
         val errorlog = binding.errormsglog
         errorlog.text = results.toString()
 
@@ -349,6 +351,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         }
     }
 
+    //object detection error
     override fun onError(error: String) {
         activity?.runOnUiThread {
             Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
@@ -358,15 +361,5 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     override fun onInitialized() {
         Log.i(TAG, "object detector inited")
         objectDetectorHelper.setupObjectDetector()
-        // Initialize our background executor
-//        cameraExecutor = Executors.newSingleThreadExecutor()
-
-        // Wait for the views to be properly laid out
-//        fragmentCameraBinding.viewFinder.post {
-            // Set up the camera and its use cases
-//            setUpCamera()
-//        }
-
-//        fragmentCameraBinding.progressCircular.visibility = View.GONE
     }
 }

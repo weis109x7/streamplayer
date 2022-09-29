@@ -29,6 +29,8 @@ import org.tensorflow.lite.task.gms.vision.TfLiteVision
 import org.tensorflow.lite.task.gms.vision.detector.Detection
 import org.tensorflow.lite.task.gms.vision.detector.ObjectDetector
 
+private const val TAG = "ObjectDetectionHelper"
+
 class ObjectDetectorHelper(
     var threshold: Float = 0.5f,
     var numThreads: Int = 2,
@@ -38,8 +40,6 @@ class ObjectDetectorHelper(
     val context: Context,
     val objectDetectorListener: DetectorListener
 ) {
-
-    private val TAG = "ObjectDetectionHelper"
 
     // For this example this needs to be a var so it can be reset on changes. If the ObjectDetector
     // will not change, a lazy val would be preferable.

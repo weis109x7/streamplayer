@@ -94,17 +94,27 @@ class GalleryFragment : Fragment() {
         val closeConnectionBtn = binding.closeConnectionBtn
         closeConnectionBtn.setOnClickListener {
             //close socket connection
-            (activity as MainActivity).client?.closeConnection()
-
-            //show toast closing connecting
-            requireActivity().runOnUiThread {
-                Toast.makeText(
-                    requireContext(),
-                    "closing connection",
-                    Toast.LENGTH_SHORT
-                ).show()
+            val success = (activity as MainActivity).client?.closeConnection()
+            if (success == true) {
+                //show toast closing connecting
+                requireActivity().runOnUiThread {
+                    Toast.makeText(
+                        requireContext(),
+                        "closing connection",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-
+            else {
+                //show toast if closing fails
+                requireActivity().runOnUiThread {
+                    Toast.makeText(
+                        requireContext(),
+                        "no connection to be closed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 
@@ -126,7 +136,7 @@ class GalleryFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        Log.i(TAG, "view destroy")
+        Log.i(TAG, "on view destroy")
         super.onDestroyView()
         _binding = null
     }
