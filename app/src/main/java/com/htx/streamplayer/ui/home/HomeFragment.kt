@@ -94,6 +94,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         nativeInit()
 
         val sv = binding.surfaceVideo
+        //texturelistener to deal with the init and destruction of the gstreamer video surface
         sv.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                 Log.d("GStreamer", "Surface created: $surface with with of $width + height of $height")
@@ -115,6 +116,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 return true
             }
 
+//            this function is called on evey frame update of the surface
             override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
                 //if object detection is turned on. run object detection function
                 if (objToggle) {
@@ -135,8 +137,8 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
             Log.i(TAG, "angle is $angle strength is $strength")
             var x = strength * kotlin.math.cos(Math.toRadians(angle.toDouble()))
             var y = strength * kotlin.math.sin(Math.toRadians(angle.toDouble()))
-//            Log.i(TAG, "cartesian X $x")
-//            Log.i(TAG, "cartesian Y $y")
+            Log.i(TAG, "cartesian X $x")
+            Log.i(TAG, "cartesian Y $y")
 
             //convert x y values to servo motor inputs
             var leftmotor = y+x
@@ -310,6 +312,15 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
     override fun onResume() {
         Log.i(TAG, "on Resume")
         super.onResume()
+
+        //using shared preference to get gstreamer pipeline from settings fragment
+        val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
+        try {
+            objectDetectorHelper.currentModel = sharedPreference.getString("savedModel","0")?.toInt()!!
+            objectDetectorHelper.clearObjectDetector()
+            Log.e(TAG, "selected model: " + objectDetectorHelper.currentModel)
+        } catch (e: Exception) {
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

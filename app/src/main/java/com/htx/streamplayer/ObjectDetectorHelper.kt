@@ -32,10 +32,12 @@ import org.tensorflow.lite.task.gms.vision.detector.ObjectDetector
 private const val TAG = "ObjectDetectionHelper"
 
 class ObjectDetectorHelper(
+    //model config can be changed on runtime or hardcoded values here
     var threshold: Float = 0.5f,
     var numThreads: Int = 2,
     var maxResults: Int = 3,
     var currentDelegate: Int = 0,
+    //model selection
     var currentModel: Int = 0,
     val context: Context,
     val objectDetectorListener: DetectorListener

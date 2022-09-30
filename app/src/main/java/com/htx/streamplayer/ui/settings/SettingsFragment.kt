@@ -44,6 +44,8 @@ class GalleryFragment : Fragment() {
         gstPipeline.setText(sharedPreference.getString("savedURL",""))
         val socketUrl=binding.socketURL
         socketUrl.setText(sharedPreference.getString("savedSocket",""))
+        val savedModel=binding.savedModel
+        savedModel.setText(sharedPreference.getString("savedModel","0"))
 
         val connectBtn = binding.connectBtn
         connectBtn.setOnClickListener {
@@ -132,6 +134,7 @@ class GalleryFragment : Fragment() {
         val editor = sharedPreference.edit()
         editor.putString("savedURL",binding.gstPipeline.text.toString())
         editor.putString("savedSocket",binding.socketURL.text.toString())
+        editor.putString("savedModel",binding.savedModel.text.toString())
         editor.apply()
     }
 
