@@ -18,6 +18,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Math.abs
 import java.util.*
 
 private const val TAG = "HomeFragmentActivity"
@@ -341,9 +342,35 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         imageHeight: Int,
         imageWidth: Int
     ) {
-        Log.i("objectdetect", "Results done")
-        Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
-        Log.i("objectdetect", "$results")
+//        Log.i("objectdetect", "Results done")
+//        Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
+//        Log.i("objectdetect", "$results")
+        if (results!!.size != 0) {
+            val centerOfObject = results[0].boundingBox.centerX()
+            val label = results[0].categories[0].label
+//            Log.i("center of object", "$centerOfObject")
+//            Log.i("label", label)
+
+            if (label == "person"){
+                var adjust = kotlin.math.abs(centerOfObject - 540).toDouble()
+//                Log.i("adjust", "get abs $adjust")
+
+                adjust = if (centerOfObject<540.0) {
+                    Log.i("label", "turn left")
+                    normalize(adjust, 0.0, 540.0, 7.0, 5.0)
+                } else {
+                    Log.i("label", "turn right")
+                    normalize(adjust, 0.0, 540.0, 7.0, 9.0)
+                }
+
+                val adjuststring = String.format("%.2f", adjust)
+
+                Log.i(TAG, "$adjuststring#$adjuststring#" )
+                (activity as MainActivity).client?.write("$adjuststring#$adjuststring#")
+
+            }
+        }
+
 
         //send results to be displayed on errorlog for debugging
         val errorlog = binding.errormsglog

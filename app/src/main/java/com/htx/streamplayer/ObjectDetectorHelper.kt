@@ -35,7 +35,7 @@ class ObjectDetectorHelper(
     //model config can be changed on runtime or hardcoded values here
     var threshold: Float = 0.5f,
     var numThreads: Int = 2,
-    var maxResults: Int = 3,
+    var maxResults: Int = 1,
     var currentDelegate: Int = 0,
     //model selection
     var currentModel: Int = 0,
