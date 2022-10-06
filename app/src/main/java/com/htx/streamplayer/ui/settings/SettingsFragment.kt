@@ -106,6 +106,7 @@ class GalleryFragment : Fragment() {
             val success = (activity as MainActivity).client?.closeConnection()
             if (success == true) {
                 //show toast closing connecting
+                (activity as MainActivity).client = null
                 requireActivity().runOnUiThread {
                     Toast.makeText(
                         requireContext(),
