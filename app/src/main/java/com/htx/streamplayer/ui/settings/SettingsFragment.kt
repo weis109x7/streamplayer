@@ -1,16 +1,21 @@
 package com.htx.streamplayer.ui.settings
 
+import android.R
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.htx.streamplayer.MainActivity
 import com.htx.streamplayer.databinding.FragmentSettingsBinding
 import kotlin.concurrent.thread
+
 
 private const val TAG = "SettingsActivity"
 
@@ -45,7 +50,9 @@ class GalleryFragment : Fragment() {
         val socketUrl=binding.socketURL
         socketUrl.setText(sharedPreference.getString("savedSocket",""))
         val savedModel=binding.savedModel
-        savedModel.setText(sharedPreference.getString("savedModel","0"))
+        sharedPreference.getString("savedModel","0")?.let { savedModel.setSelection(it.toInt(),false) }
+
+
 
         val connectBtn = binding.connectBtn
         connectBtn.setOnClickListener {
@@ -134,7 +141,7 @@ class GalleryFragment : Fragment() {
         val editor = sharedPreference.edit()
         editor.putString("savedURL",binding.gstPipeline.text.toString())
         editor.putString("savedSocket",binding.socketURL.text.toString())
-        editor.putString("savedModel",binding.savedModel.text.toString())
+        editor.putString("savedModel",binding.savedModel.selectedItemPosition.toString())
         editor.apply()
     }
 

@@ -45,14 +45,16 @@
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="16dp" />
 
-    <EditText
-        android:id="@+id/savedModel"
-        android:layout_width="80dp"
-        android:layout_height="66dp"
-        android:text=""
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="MissingConstraints" />
+<!--    <EditText-->
+<!--        android:id="@+id/savedModel"-->
+<!--        android:layout_width="80dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="164dp"-->
+<!--        android:layout_marginBottom="4dp"-->
+<!--        android:text=""-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        tools:ignore="MissingConstraints" />-->
 
     <TextView
         android:id="@+id/textView3"
@@ -72,5 +74,13 @@
         android:layout_marginBottom="16dp"
         android:text="Gst Pipeline"
         app:layout_constraintBottom_toTopOf="@+id/gstPipeline"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Spinner
+        android:id="@+id/savedModel"
+        android:entries="@array/models_available"
+        android:layout_width="wrap_content"
+        android:layout_height="70dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

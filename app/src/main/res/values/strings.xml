@@ -9,4 +9,12 @@
 
     <string name="menu_home">Home</string>
     <string name="menu_settings">settings</string>
+
+    <string-array name="models_available">
+        <item>mobilenetv1</item>
+        <item>efficientdet-lite0</item>
+        <item>efficientdet-lite1</item>
+        <item>efficientdet-lite2</item>
+    </string-array>
+
 </resources>

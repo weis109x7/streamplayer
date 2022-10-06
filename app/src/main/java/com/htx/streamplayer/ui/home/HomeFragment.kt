@@ -313,7 +313,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         Log.i(TAG, "on Resume")
         super.onResume()
 
-        //using shared preference to get gstreamer pipeline from settings fragment
+        //using shared preference to get selected model
         val sharedPreference = this.requireActivity().getSharedPreferences("pref", Context.MODE_PRIVATE)
         try {
             objectDetectorHelper.currentModel = sharedPreference.getString("savedModel","0")?.toInt()!!
