@@ -53,6 +53,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
 
     private var recordToggle = false
     private var objToggle = false
+    private var objTrack = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -117,12 +118,17 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 return true
             }
 
+            var counter: Int = 0
 //            this function is called on evey frame update of the surface
             override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
                 //if object detection is turned on. run object detection function
                 if (objToggle) {
                     //run on every frame
-                    detectObj(sv)
+                    counter += 1
+                    if (counter%5==0) {
+                        detectObj(sv)
+                        counter = 0
+                    }
                 }
             }
         }
@@ -184,6 +190,20 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 buttonObjDetect.text = "Obj On"
                 //stop detect
                 stopDetect()
+            }
+        }
+
+        //setup object track button
+        val buttonObjTrack = binding.objTrack
+        buttonObjTrack.setOnClickListener {
+            if (!objTrack){
+                buttonObjTrack.text = "Track Off"
+                //start track
+                objTrack = true
+            }else{
+                buttonObjTrack.text = "Track On"
+                //stop track
+                objTrack = false
             }
         }
     }
@@ -345,7 +365,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
 //        Log.i("objectdetect", "Results done")
 //        Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
 //        Log.i("objectdetect", "$results")
-        if (results!!.size != 0) {
+        if (objTrack && (results!!.size == 1)) {
             val centerOfObject = results[0].boundingBox.centerX()
             val label = results[0].categories[0].label
 //            Log.i("center of object", "$centerOfObject")
