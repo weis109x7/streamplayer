@@ -125,7 +125,7 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
                 if (objToggle) {
                     //run on every frame
                     counter += 1
-                    if (counter%5==0) {
+                    if (counter%3==0) {
                         detectObj(sv)
                         counter = 0
                     }
@@ -157,7 +157,12 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
             val rightmotorstring = String.format("%.2f", rightmotor)
 
             //send motor inputs through sockets every 0.5sec
-            (activity as MainActivity).client?.write("$leftmotorstring#$rightmotorstring#")
+            if (("$leftmotorstring#$rightmotorstring#") != "7.00#7.00#") {
+                (activity as MainActivity).client?.write("$leftmotorstring#$rightmotorstring#")
+            }
+            else{
+                (activity as MainActivity).client?.write("0#0#")
+            }
             Log.i(TAG, "$leftmotorstring#$rightmotorstring#" )
         },500)
 
@@ -362,35 +367,27 @@ class HomeFragment : Fragment() , ObjectDetectorHelper.DetectorListener {
         imageHeight: Int,
         imageWidth: Int
     ) {
-//        Log.i("objectdetect", "Results done")
-//        Log.i("objectdetect", "width $imageHeight + height $imageWidth + inference time $inferenceTime")
-//        Log.i("objectdetect", "$results")
+        Log.i("objectdetect", "Results done")
+        Log.i("objectdetect", "width $imageWidth + height $imageHeight + inference time $inferenceTime")
+        Log.i("objectdetect", "$results")
         if (objTrack && (results!!.size == 1)) {
             val centerOfObject = results[0].boundingBox.centerX()
             val label = results[0].categories[0].label
-//            Log.i("center of object", "$centerOfObject")
-//            Log.i("label", label)
+            Log.i("center of object", "$centerOfObject")
+            Log.i("label", label)
 
             if (label == "person"){
-                var adjust = kotlin.math.abs(centerOfObject - 540).toDouble()
-//                Log.i("adjust", "get abs $adjust")
-
-                adjust = if (centerOfObject<540.0) {
+                if (centerOfObject<imageWidth/2-100) {
                     Log.i("label", "turn left")
-                    normalize(adjust, 0.0, 540.0, 7.0, 5.0)
-                } else {
+                    (activity as MainActivity).client?.write("5.7#0#")
+                } else if (centerOfObject>imageWidth/2+100){
                     Log.i("label", "turn right")
-                    normalize(adjust, 0.0, 540.0, 7.0, 9.0)
+                    (activity as MainActivity).client?.write("7.5#0#")
+                } else {
+                    (activity as MainActivity).client?.write("0#0#")
                 }
-
-                val adjuststring = String.format("%.2f", adjust)
-
-                Log.i(TAG, "$adjuststring#$adjuststring#" )
-                (activity as MainActivity).client?.write("$adjuststring#$adjuststring#")
-
             }
         }
-
 
         //send results to be displayed on errorlog for debugging
         val errorlog = binding.errormsglog
